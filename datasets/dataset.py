@@ -2,12 +2,12 @@ import requests
 import time
 
 start_date = 1483228800 * 1000 #Jan 01 2017
-pair = 'DSHBTC'
-timeframe = '5m'
+pair = 'XMRBTC'
+timeframe = '30m'
 
 final_data = []
 
-for _ in range(0,100):
+for _ in range(0,10):
     url = 'https://api.bitfinex.com/v2/candles/trade:' + timeframe + ':t' + pair + '/hist?sort=1&limit=1000&start=' + str(start_date)
 
     r = requests.get(url)
