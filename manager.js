@@ -131,7 +131,7 @@ function closeLongPosition(pair, close){
   bfx.testTrade(pair, close, pairs[pair]['entryAmount'], 'sell',  'long',
     function(){
       console.log(pair, "Closed Long Position at: ", close, ' amount ', pairs[pair]['entryAmount']);
-      console.log(pair, ' Result amount ', bfx.initAmount);
+      console.log('****Result amount ', bfx.initAmount);
       console.log(pair, 'Success ', success, 'Loss ', loss);
       console.log("----------------------------------------------------");
       pairs[pair]['stopLossPrice'] = 0; //Reset stoploss
@@ -146,7 +146,7 @@ function closeShortPosition(pair, close){
   bfx.testTrade(pair, close, pairs[pair]['entryAmount'], 'buy', 'short',
     function(){
       console.log(pair, "Closed Short Position at: ", close, ' amount ', pairs[pair]['entryAmount']);
-      console.log(pair, ' Result amount ', bfx.initAmount);
+      console.log('****Result amount ', bfx.initAmount);
       console.log(pair, 'Success ', success, 'Loss ', loss);
       console.log("----------------------------------------------------");
       pairs[pair]['stopLossPrice'] = 0; //Reset stoploss
