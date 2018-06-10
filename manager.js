@@ -2,8 +2,8 @@ fs = require('fs');
 const SMA = require('technicalindicators').SMA;
 const ADX = require('technicalindicators').ADX;
 const pairsArray = ['DSHBTC', 'XMRBTC', 'ETHBTC'];
-const BFXTrade = require('./BfxTrade')
-
+const BFXTrade = require('./BfxTrade');
+var assert = require('assert');
 var bfx = new BFXTrade();
 var pairs = {};
 
@@ -32,7 +32,7 @@ function Manager(){
       prevMaValue: 0,
       prevClose: 0,
       adx: new ADX({period: adxPeriods, close:[], high:[], low:[]}),
-      adxValue: 0,
+      adxValue: {},
       long: false,
       short: false,
       stopLossPrice: 0,
@@ -55,6 +55,7 @@ Manager.prototype.runBot = function(){
     }
   }
 
+
   // for( pair in marketData){
   //   for(candle of marketData[pair]){
   //     calculateMA(pair, candle[2])
@@ -63,9 +64,12 @@ Manager.prototype.runBot = function(){
 
 }
 function updateIndicators(pair, price){
+  var output = {};
   pairs[pair]['maValue'] = pairs[pair]['ma'].nextValue(price[2]);
   pairs[pair]['adxValue'] = pairs[pair]['adx'].nextValue({close: price[2] , high: price[3],
     low: price[4]});
+  output = pairs[pair]['adxValue'];
+  console.log(output)
 
   findTradeOpportunity(pair, price[2]);
   pairs[pair]['prevMaValue'] = pairs[pair]['maValue']
@@ -80,7 +84,7 @@ function findTradeOpportunity(pair, close){
       && close > pairs[pair]['maValue'] && pairs[pair]['adxValue'] > trendStrength){
       openLongPosition(pair, close);
     } else if(pairs[pair]['prevClose'] > pairs[pair]['prevMaValue'] 
-      && close < pairs[pair]['maValue']){
+      && close < pairs[pair]['maValue'] && pairs[pair]['adxValue'] > trendStrength){
       openShortPosition(pair, close);
     }
 
