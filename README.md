@@ -1,1 +1,1 @@
-# btcbot
+# Personal Crypto trading bot
