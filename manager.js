@@ -1,15 +1,17 @@
 fs = require('fs');
 const SMA = require('technicalindicators').SMA;
 const ADX = require('technicalindicators').ADX;
+const ATR = require('technicalindicators').ATR;
 const pairsArray = ['DSHBTC', 'XMRBTC', 'ETHBTC'];
 const BFXTrade = require('./BfxTrade');
-var assert = require('assert');
+
 var bfx = new BFXTrade();
 var pairs = {};
 
 const maPeriods = 20;
 const adxPeriods = 14;
 const trendStrength = 25;
+const atrPeriods = 14;
 
 var openedPositions = 0;
 var success = 0;
@@ -32,7 +34,9 @@ function Manager(){
       prevMaValue: 0,
       prevClose: 0,
       adx: new ADX({period: adxPeriods, close:[], high:[], low:[]}),
-      adxValue: {},
+      adxValue: 0,
+      atr: new ATR({period: atrPeriods, close:[], high:[], low:[]}),
+      atrValue: 0,
       long: false,
       short: false,
       stopLossPrice: 0,
@@ -66,6 +70,8 @@ Manager.prototype.runBot = function(){
 function updateIndicators(pair, price){
   pairs[pair]['maValue'] = pairs[pair]['ma'].nextValue(price[2]);
   pairs[pair]['adxValue'] = pairs[pair]['adx'].nextValue({close: price[2] , high: price[3],
+    low: price[4]});
+  pairs[pair]['atrValue'] = pairs[pair]['atr'].nextValue({close: price[2] , high: price[3],
     low: price[4]});
 
   if(pairs[pair]['adxValue']){
@@ -117,7 +123,7 @@ function findTradeOpportunity(pair, close){
 //Position Manager
 //Ordens de acao, gostaria de bota-las em outro arquivo
 function openLongPosition(pair, close){
-  pairs[pair]['stopLossPrice'] = close*0.98;
+  pairs[pair]['stopLossPrice'] = close - pairs[pair]['atrValue']*2;
   pairs[pair]['entryAmount'] = getPositionSize(close);
   bfx.testTrade(pair, close, pairs[pair]['entryAmount'], 'buy', 'long',
     function(){
@@ -132,7 +138,7 @@ function openLongPosition(pair, close){
 }
 
 function openShortPosition(pair, close){
-  pairs[pair]['stopLossPrice'] = close*1.02;
+  pairs[pair]['stopLossPrice'] = close + pairs[pair]['atrValue']*2;
   pairs[pair]['entryAmount'] = getPositionSize(close);
   bfx.testTrade(pair, close, pairs[pair]['entryAmount'], 'sell', 'short',
     function(){
