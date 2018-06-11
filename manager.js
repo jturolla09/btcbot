@@ -55,7 +55,6 @@ Manager.prototype.runBot = function(){
     }
   }
 
-
   // for( pair in marketData){
   //   for(candle of marketData[pair]){
   //     calculateMA(pair, candle[2])
@@ -63,15 +62,16 @@ Manager.prototype.runBot = function(){
   // }
 
 }
+
 function updateIndicators(pair, price){
-  var output = {};
   pairs[pair]['maValue'] = pairs[pair]['ma'].nextValue(price[2]);
   pairs[pair]['adxValue'] = pairs[pair]['adx'].nextValue({close: price[2] , high: price[3],
     low: price[4]});
-  output = pairs[pair]['adxValue'];
-  console.log(output)
 
-  findTradeOpportunity(pair, price[2]);
+  if(pairs[pair]['adxValue']){
+    findTradeOpportunity(pair, price[2]);
+  }
+  
   pairs[pair]['prevMaValue'] = pairs[pair]['maValue']
   pairs[pair]['prevClose'] = price[2];
 }
@@ -81,10 +81,10 @@ function findTradeOpportunity(pair, close){
   // Se eu nao tenho ordem aberta:
   if(!pairs[pair]['long'] && !pairs[pair]['short']){
     if(pairs[pair]['prevClose'] < pairs[pair]['prevMaValue'] 
-      && close > pairs[pair]['maValue'] && pairs[pair]['adxValue'] > trendStrength){
+      && close > pairs[pair]['maValue'] && pairs[pair]['adxValue'].adx > trendStrength){
       openLongPosition(pair, close);
     } else if(pairs[pair]['prevClose'] > pairs[pair]['prevMaValue'] 
-      && close < pairs[pair]['maValue'] && pairs[pair]['adxValue'] > trendStrength){
+      && close < pairs[pair]['maValue'] && pairs[pair]['adxValue'].adx > trendStrength){
       openShortPosition(pair, close);
     }
 
