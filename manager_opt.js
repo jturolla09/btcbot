@@ -8,12 +8,12 @@ const BFXTrade = require('./BfxTrade');
 var bfx = new BFXTrade();
 var pairs = {};
 
-const accountRiskCoeff = 0.01;
-// const maPeriods = 20;
+const accountRiskCoeff = 0.01; //OTIMIZAR ISSO
+
 const maPeriods = [10,20,50,100,200];
 const adxPeriods = [15,20,25,30];
-const trendStrength = 25;
-const atrPeriods = 14;
+const trendStrength = 25; //OTIMIZAR ISSO
+const atrPeriods = 14; //OTIMIZAR ISSO
 
 var openedPositions = 0;
 var success = 0;
