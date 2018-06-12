@@ -8,6 +8,7 @@ const BFXTrade = require('./BfxTrade');
 var bfx = new BFXTrade();
 var pairs = {};
 
+const accountRiskCoeff = 0.01;
 const maPeriods = 20;
 const adxPeriods = 14;
 const trendStrength = 25;
@@ -41,7 +42,12 @@ function Manager(){
       short: false,
       stopLossPrice: 0,
       entryAmount: 0,
-      entryPrice: 0
+      entryPrice: 0,
+      success: 0,
+      loss: 0,
+      profit: [],
+      profitPct: [],
+      kelly: 0.25
     }
   }
 }
@@ -68,6 +74,9 @@ Manager.prototype.runBot = function(){
 }
 
 function updateIndicators(pair, price){
+  pairs[pair]['prevMaValue'] = pairs[pair]['maValue'];
+  pairs[pair]['prevClose'] = price[2];
+
   pairs[pair]['maValue'] = pairs[pair]['ma'].nextValue(price[2]);
   pairs[pair]['adxValue'] = pairs[pair]['adx'].nextValue({close: price[2] , high: price[3],
     low: price[4]});
@@ -77,9 +86,7 @@ function updateIndicators(pair, price){
   if(pairs[pair]['adxValue']){
     findTradeOpportunity(pair, price[2]);
   }
-  
-  pairs[pair]['prevMaValue'] = pairs[pair]['maValue']
-  pairs[pair]['prevClose'] = price[2];
+
 }
 
 //Aparentemente essa e a funcao que define a estrategia do BOT
@@ -97,23 +104,27 @@ function findTradeOpportunity(pair, close){
   //se eu tenho ordem aberta de compra
   }else if(pairs[pair]['long']){
       if(close < pairs[pair]['maValue'] && close > 1.004*pairs[pair]['entryPrice']){
-        closeLongPosition(pair, close);
         success++;
+        pairs[pair]['success']++;
+        closeLongPosition(pair, close);
       //StopLoss
       }else if(close < pairs[pair]['stopLossPrice']){
-        closeLongPosition(pair, pairs[pair]['stopLossPrice']);
         loss++;
+        pairs[pair]['loss']++;
+        closeLongPosition(pair, pairs[pair]['stopLossPrice']);
       }
 
   //se eu tenho ordem aberta de venda
   }else if(pairs[pair]['short']){
       if(close > pairs[pair]['maValue'] && close < 0.996*pairs[pair]['entryPrice']){
         success++;
+        pairs[pair]['success']++;
         closeShortPosition(pair, close);
 
       //Stoploss
       }else if(close > pairs[pair]['stopLossPrice']){
         loss++;
+        pairs[pair]['loss']++;
         closeShortPosition(pair, pairs[pair]['stopLossPrice']);
       }
 
@@ -155,9 +166,14 @@ function openShortPosition(pair, close){
 function closeLongPosition(pair, close){
   bfx.testTrade(pair, close, pairs[pair]['entryAmount'], 'sell',  'long',
     function(){
+      var profit = pairs[pair]['entryAmount']*(close - pairs[pair]['entryPrice']);
+      pairs[pair]['profit'].push(profit);
+      pairs[pair]['profitPct'].push(close/pairs[pair]['entryPrice']);
       console.log(pair, "Closed Long Position at: ", close, ' amount ', pairs[pair]['entryAmount']);
+      console.log(pair, 'Profit', profit, ' BTC');
       console.log('****Result amount ', bfx.initAmount);
-      console.log(pair, 'Success ', success, 'Loss ', loss);
+      console.log(pair, 'Success ', pairs[pair]['success'], 'Loss ', pairs[pair]['loss']);
+      console.log('Total Success ', success, 'Total Loss ', loss);
       console.log("----------------------------------------------------");
       pairs[pair]['stopLossPrice'] = 0; //Reset stoploss
       pairs[pair]['entryAmount'] = 0;
@@ -170,9 +186,14 @@ function closeLongPosition(pair, close){
 function closeShortPosition(pair, close){
   bfx.testTrade(pair, close, pairs[pair]['entryAmount'], 'buy', 'short',
     function(){
+      var profit = pairs[pair]['entryAmount']*(pairs[pair]['entryPrice'] - close);
+      pairs[pair]['profit'].push(profit);
+      pairs[pair]['profitPct'].push(pairs[pair]['entryPrice']/close);
       console.log(pair, "Closed Short Position at: ", close, ' amount ', pairs[pair]['entryAmount']);
+      console.log(pair, 'Profit', profit, ' BTC');
       console.log('****Result amount ', bfx.initAmount);
-      console.log(pair, 'Success ', success, 'Loss ', loss);
+      console.log(pair, 'Success ', pairs[pair]['success'], 'Loss ', pairs[pair]['loss']);
+      console.log('Total Success ', success, 'Total Loss ', loss);
       console.log("----------------------------------------------------");
       pairs[pair]['stopLossPrice'] = 0; //Reset stoploss
       pairs[pair]['entryAmount'] = 0;
@@ -183,8 +204,70 @@ function closeShortPosition(pair, close){
 }
 
 
-function getPositionSize(close){
-  return (bfx.initAmount/(pairsArray.length - openedPositions))/close;
+function getPositionSize(close){ //parece otimizado Kelly Criterium
+
+  if(pairs[pair]['profit'].length >= 50){
+    var w = pairs[pair]['success']/(pairs[pair]['success']+pairs[pair]['loss']);
+    
+    var positive = [];
+    var negative = [];
+    for(var elem of pairs[pair]['profit']){
+      if(elem > 0){
+        positive.push(elem);
+      }else{
+        negative.push(Math.abs(elem));
+      }
+    }
+    if(positive.length != 0 && negative.length != 0){
+      var posAvg = 0;
+      for(elem of positive){
+        posAvg += elem;
+      }
+      posAvg = posAvg/positive.length;
+
+      var negAvg = 0;
+      for(elem of negative){
+        negAvg += elem;
+      }
+      negAvg = negAvg/negative.length;
+
+      var r = posAvg/negAvg;
+      pairs[pair]['kelly'] = Math.abs((w - (1-w)/r)/2);
+    } 
+
+  }
+
+  var kellyPositionSize = (bfx.initAmount * pairs[pair]['kelly'])/close;
+
+  var tradeRisk = 0;
+  if(close < pairs[pair]['stopLossPrice']){ //Open long position
+    tradeRisk = 1 - close/pairs[pair]['stopLossPrice'];
+  }else{ //Open short position
+    tradeRisk = 1 - pairs[pair]['stopLossPrice']/close;
+  }
+
+
+  var tradeRiskCoeff = 0;
+
+  if(tradeRisk > accountRiskCoeff){
+    tradeRiskCoeff = (accountRiskCoeff/tradeRisk)/(pairsArray.length - openedPositions);
+  }else{
+    tradeRiskCoeff = (tradeRisk/accountRiskCoeff)/(pairsArray.length - openedPositions);
+  }
+
+  var riskPositionSize = (bfx.initAmount*tradeRiskCoeff)/close;
+
+  var positionSize = Math.min(kellyPositionSize, riskPositionSize);
+
+  console.log(pair, "Kelly position coeff ", pairs[pair]['kelly'], "trade risk coeff ", 
+    tradeRiskCoeff);
+  if(kellyPositionSize > riskPositionSize){
+    console.log(pair, "Position is adjusted according to risk position size");
+  }else{
+    console.log(pair, "Position is adjusted according to kelly position size");
+  }
+  
+  return positionSize;
 }
 
 module.exports = Manager;
