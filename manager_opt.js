@@ -8,7 +8,7 @@ const BFXTrade = require('./BfxTrade');
 var bfx = new BFXTrade();
 var pairs = {};
 
-const accountRiskCoeff = 0.01; //OTIMIZAR ISSO
+const accountRiskCoeffs = [0.01, 0.02, 0.03, 0.04, 0.05]; //OTIMIZAR ISSO
 
 const maPeriods = [10,20,50,100,200];
 const adxPeriods = [15,20,25,30];
@@ -21,6 +21,7 @@ var loss = 0;
 
 var bestMA = 0;
 var bestADX = 0;
+var bestRisk = 0;
 var maxAmount = 0;
 // marketData returns:
 // 0 = timestamp
@@ -35,7 +36,7 @@ function Manager(){
   
 }
 
-function initPairs(maPeriod, adxPeriod){
+function initPairs(maPeriod, adxPeriod, accountRiskCoeff){
 
   for(pair of pairsArray){
     pairs[pair]={
@@ -56,7 +57,8 @@ function initPairs(maPeriod, adxPeriod){
       loss: 0,
       profit: [],
       profitPct: [],
-      kelly: 0.25
+      kelly: 0.25,
+      accountRisk: accountRiskCoeff
     }
   }
 }
@@ -67,40 +69,44 @@ Manager.prototype.runBot = function(){
     marketData[pair] = JSON.parse(fs.readFileSync(__dirname+'/datasets/BFX_'+pair+'_30m.json', 'utf8'));
   }
 
-  for(adxPeriod of adxPeriods){
-    for(maPeriod of maPeriods){
-      initPairs(maPeriod, adxPeriod);
-      openedPositions = 0;
-      success = 0;
-      loss = 0;
-      bfx.initAmount = 100;
-      bfx.reserve = {};
-      console.log("Starting backtest");
-      console.log("----------------------------------------------------------------");
-      for(i=0; i<marketData[pairsArray[0]].length; i++){
-        for(pair in marketData){
-          updateIndicators(pair, marketData[pair][i]);  
+  for(accountRiskCoeff of accountRiskCoeffs){
+    for(adxPeriod of adxPeriods){
+      for(maPeriod of maPeriods){
+        initPairs(maPeriod, adxPeriod, accountRiskCoeff);
+        openedPositions = 0;
+        success = 0;
+        loss = 0;
+        bfx.initAmount = 100;
+        bfx.reserve = {};
+        console.log("Starting backtest");
+        console.log("----------------------------------------------------------------");
+        for(i=0; i<marketData[pairsArray[0]].length; i++){
+          for(pair in marketData){
+            updateIndicators(pair, marketData[pair][i]);  
+          }
         }
-      }
 
-      if(openedPositions == 0){
-        var finalAmount = bfx.initAmount;
-      }else{
-        var finalAmount = bfx.initAmount;
-        for(pair in pairs){
-          finalAmount += pairs[pair]['entryAmount']*pairs[pair]['entryPrice'];
+        if(openedPositions == 0){
+          var finalAmount = bfx.initAmount;
+        }else{
+          var finalAmount = bfx.initAmount;
+          for(pair in pairs){
+            finalAmount += pairs[pair]['entryAmount']*pairs[pair]['entryPrice'];
+          }
         }
-      }
 
-      if(finalAmount > maxAmount){
-        bestMA = maPeriod;
-        bestADX = adxPeriod;
-        maxAmount = finalAmount;
-      }
+        if(finalAmount > maxAmount){
+          bestMA = maPeriod;
+          bestADX = adxPeriod;
+          bestRisk = accountRiskCoeff;
+          maxAmount = finalAmount;
+        }
 
-      console.log("bestMA", bestMA);
-      console.log("bestADX", bestADX);
-      console.log("maxAmount", maxAmount);
+        console.log("bestMA", bestMA);
+        console.log("bestADX", bestADX);
+        console.log("bestRISK", bestRisk);
+        console.log("maxAmount", maxAmount);
+      }
     }
   }
 
@@ -145,6 +151,7 @@ function findTradeOpportunity(pair, close){
 
   //se eu tenho ordem aberta de compra
   }else if(pairs[pair]['long']){
+      
       if(close < pairs[pair]['maValue'] && close > 1.004*pairs[pair]['entryPrice']){
         success++;
         pairs[pair]['success']++;
@@ -158,6 +165,7 @@ function findTradeOpportunity(pair, close){
 
   //se eu tenho ordem aberta de venda
   }else if(pairs[pair]['short']){
+
       if(close > pairs[pair]['maValue'] && close < 0.996*pairs[pair]['entryPrice']){
         success++;
         pairs[pair]['success']++;
@@ -247,7 +255,7 @@ function closeShortPosition(pair, close){
 
 
 function getPositionSize(close){ //parece otimizado Kelly Criterium
-
+  accountRiskCoeff = pairs[pair]['accountRisk'];
   if(pairs[pair]['profit'].length >= 50){
     var w = pairs[pair]['success']/(pairs[pair]['success']+pairs[pair]['loss']);
     

@@ -103,10 +103,12 @@ function findTradeOpportunity(pair, close){
 
   //se eu tenho ordem aberta de compra
   }else if(pairs[pair]['long']){
+
       if(close < pairs[pair]['maValue'] && close > 1.004*pairs[pair]['entryPrice']){
         success++;
         pairs[pair]['success']++;
         closeLongPosition(pair, close);
+
       //StopLoss
       }else if(close < pairs[pair]['stopLossPrice']){
         loss++;
@@ -116,6 +118,7 @@ function findTradeOpportunity(pair, close){
 
   //se eu tenho ordem aberta de venda
   }else if(pairs[pair]['short']){
+
       if(close > pairs[pair]['maValue'] && close < 0.996*pairs[pair]['entryPrice']){
         success++;
         pairs[pair]['success']++;
