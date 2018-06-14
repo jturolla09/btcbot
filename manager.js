@@ -9,10 +9,10 @@ var bfx = new BFXTrade();
 var pairs = {};
 
 const accountRiskCoeff = 0.01;
-const maPeriods = 100;
-const adxPeriods = 15;
-const trendStrength = 25;
-const atrPeriods = 14;
+const maPeriods = 50;
+const adxPeriods = 20;
+const trendStrength = 10;
+const atrPeriods = 5;
 
 var openedPositions = 0;
 var success = 0;
@@ -82,7 +82,9 @@ function updateIndicators(pair, price){
   pairs[pair]['atrValue'] = pairs[pair]['atr'].nextValue({close: price[2] , high: price[3],
     low: price[4]});
 
-  if(pairs[pair]['adxValue']){
+  if(pairs[pair]['maValue'] != undefined &&
+    pairs[pair]['adxValue'] != undefined &&
+    pairs[pair]['atrValue'] != undefined){
     findTradeOpportunity(pair, price[2]);
   }
 
