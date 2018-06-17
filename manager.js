@@ -195,7 +195,7 @@ function closeLongPosition(pair, close){
 function closeShortPosition(pair, close){
   bfx.testTrade(pair, close, pairs[pair]['creditAmount'], 'buy', 'short',
     function(){
-      var profit = ((pairs[pair]['entryAmount']/pairs[pair]['entryPrice'])*close)-pairs[pair]['entryAmount'];
+      var profit = (((pairs[pair]['entryAmount']/pairs[pair]['entryPrice'])*close)-pairs[pair]['entryAmount'])*(-1);
       pairs[pair]['profit'].push(profit);
       pairs[pair]['profitPct'].push(pairs[pair]['entryPrice']/close);
       console.log(pair, "Closed Short Position at: ", close, ' amount ', pairs[pair]['entryAmount'], pair);
