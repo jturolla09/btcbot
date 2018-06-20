@@ -8,17 +8,18 @@ const BFXTrade = require('./BfxTrade');
 var bfx = new BFXTrade();
 var pairs = {};
 
-const accountRiskCoeffs = [0.01, 0.02, 0.03, 0.03];
+const accountRiskCoeffs = [0.01, 0.02, 0.03, 0.04, 0.05]; //done
 
 const maPeriods = [10,20,50,100,200];
-const adxPeriods = [15,20,25,30];
-const trendStrengths = [1, 5,10,25,30];
-const atrPeriods = [5,6,8,10,12,14];
+const adxPeriods = [5, 10, 15,20,25,30]; //done
+const trendStrengths = [1, 5,10,25,30]; //done
+const atrPeriods = [5,6,8,10,12,14]; //done
 
 var openedPositions = 0;
 var success = 0;
 var loss = 0;
 
+var finalAmount = 0;
 var bestMA = 0;
 var bestADX = 0;
 var bestRisk = 0;
@@ -82,22 +83,24 @@ Manager.prototype.runBot = function(){
             loss = 0;
             bfx.initAmount = 100;
             bfx.reserve = {};
-            console.log("Starting backtest");
-            console.log("----------------------------------------------------------------");
+            // console.log("Starting backtest");
+            // console.log("----------------------------------------------------------------");
             for(i=0; i<marketData[pairsArray[0]].length; i++){
               for(pair in marketData){
                 updateIndicators(pair, marketData[pair][i]);  
               }
             }
 
-            if(openedPositions == 0){
-              var finalAmount = bfx.initAmount;
-            }else{
-              var finalAmount = bfx.initAmount;
-              for(pair in pairs){
-                finalAmount += pairs[pair]['entryAmount']*pairs[pair]['entryPrice'];
-              }
-            }
+            // if(openedPositions == 0){
+            //   finalAmount = bfx.initAmount;
+            // }else{
+            //   finalAmount = bfx.initAmount;
+            //   for(pair in pairs){
+            //     finalAmount += pairs[pair]['entryAmount'];
+            //   }
+            // }
+
+            finalAmount = bfx.initAmount;
 
             if(finalAmount > maxAmount){
               bestMA = maPeriod;
@@ -106,14 +109,15 @@ Manager.prototype.runBot = function(){
               maxAmount = finalAmount;
               bestStrength = trendStrength;
               bestATR = atrPeriod;
+
+              console.log("bestMA", bestMA);
+              console.log("bestATR", bestATR);
+              console.log("bestADX", bestADX);
+              console.log("bestRISK", bestRisk);
+              console.log("bestStrength", bestStrength);
+              console.log("maxAmount", maxAmount);
             }
 
-            console.log("bestMA", bestMA);
-            console.log("bestATR", bestATR);
-            console.log("bestADX", bestADX);
-            console.log("bestRISK", bestRisk);
-            console.log("bestStrength", bestStrength);
-            console.log("maxAmount", maxAmount);
           }
         }
       }
@@ -140,7 +144,6 @@ function updateIndicators(pair, price){
   if(pairs[pair]['maValue'] != undefined &&
     pairs[pair]['adxValue'] != undefined &&
     pairs[pair]['atrValue'] != undefined){
-
     findTradeOpportunity(pair, price[2]);
   }
 
@@ -159,13 +162,14 @@ function findTradeOpportunity(pair, close){
       openShortPosition(pair, close);
     }
 
-  //se eu tenho ordem aberta de compra
+  //se eu tenho ordem aberta de LONG
   }else if(pairs[pair]['long']){
-      
+
       if(close < pairs[pair]['maValue'] && close > 1.004*pairs[pair]['entryPrice']){
         success++;
         pairs[pair]['success']++;
         closeLongPosition(pair, close);
+
       //StopLoss
       }else if(close < pairs[pair]['stopLossPrice']){
         loss++;
@@ -173,7 +177,7 @@ function findTradeOpportunity(pair, close){
         closeLongPosition(pair, pairs[pair]['stopLossPrice']);
       }
 
-  //se eu tenho ordem aberta de venda
+  //se eu tenho ordem aberta de SHORT
   }else if(pairs[pair]['short']){
 
       if(close > pairs[pair]['maValue'] && close < 0.996*pairs[pair]['entryPrice']){
@@ -200,9 +204,10 @@ function openLongPosition(pair, close){
     function(){
       pairs[pair]['long'] = true;
       pairs[pair]['entryPrice'] = close;
+      pairs[pair]['coinAmount'] = (pairs[pair]['entryAmount']/close);
       openedPositions++;
-      // console.log(pair, "Opened Long Position at: ", close, ' amount ', pairs[pair]['entryAmount']);
-      // console.log(pair, "Stop Loss price: ", close*0.98);
+      // console.log(pair, "Opened Long Position at: ", close, ' amount (BTC)', pairs[pair]['entryAmount']);
+      // console.log(pair, "Stop Loss price: ", pairs[pair]['stopLossPrice']);
       // console.log(pair, ' Opened positions ', openedPositions);
       // console.log("----------------------------------------------------");
     });
@@ -215,21 +220,22 @@ function openShortPosition(pair, close){
     function(){
       pairs[pair]['short'] = true;
       pairs[pair]['entryPrice'] = close;
+      pairs[pair]['creditAmount'] = pairs[pair]['entryAmount']*close;
       openedPositions++;
-      // console.log(pair, "Opened Short Position at: ", close, ' amount ', pairs[pair]['entryAmount']);
-      // console.log(pair, "Stop Loss price: ", close*1.02);
+      // console.log(pair, "Opened Short Position at: ", close, ' amount (BTC)', pairs[pair]['entryAmount']);
+      // console.log(pair, "Stop Loss price: ", pairs[pair]['stopLossPrice']);
       // console.log(pair, ' Opened positions ', openedPositions);
       // console.log("----------------------------------------------------");
   });
 }
 
 function closeLongPosition(pair, close){
-  bfx.testTrade(pair, close, pairs[pair]['entryAmount'], 'sell',  'long',
+  bfx.testTrade(pair, close, pairs[pair]['coinAmount'], 'sell',  'long',
     function(){
-      var profit = pairs[pair]['entryAmount']*(close - pairs[pair]['entryPrice']);
+      var profit = ((pairs[pair]['entryAmount']/pairs[pair]['entryPrice'])*close)-pairs[pair]['entryAmount'];
       pairs[pair]['profit'].push(profit);
       pairs[pair]['profitPct'].push(close/pairs[pair]['entryPrice']);
-      // console.log(pair, "Closed Long Position at: ", close, ' amount ', pairs[pair]['entryAmount']);
+      // console.log(pair, "Closed Long Position at: ", close, ' amount ', pairs[pair]['entryAmount'], pair);
       // console.log(pair, 'Profit', profit, ' BTC');
       // console.log('****Result amount ', bfx.initAmount);
       // console.log(pair, 'Success ', pairs[pair]['success'], 'Loss ', pairs[pair]['loss']);
@@ -244,12 +250,12 @@ function closeLongPosition(pair, close){
 }
 
 function closeShortPosition(pair, close){
-  bfx.testTrade(pair, close, pairs[pair]['entryAmount'], 'buy', 'short',
+  bfx.testTrade(pair, close, pairs[pair]['creditAmount'], 'buy', 'short',
     function(){
-      var profit = pairs[pair]['entryAmount']*(pairs[pair]['entryPrice'] - close);
+      var profit = (((pairs[pair]['entryAmount']/pairs[pair]['entryPrice'])*close)-pairs[pair]['entryAmount'])*(-1);
       pairs[pair]['profit'].push(profit);
       pairs[pair]['profitPct'].push(pairs[pair]['entryPrice']/close);
-      // console.log(pair, "Closed Short Position at: ", close, ' amount ', pairs[pair]['entryAmount']);
+      // console.log(pair, "Closed Short Position at: ", close, ' amount ', pairs[pair]['entryAmount'], pair);
       // console.log(pair, 'Profit', profit, ' BTC');
       // console.log('****Result amount ', bfx.initAmount);
       // console.log(pair, 'Success ', pairs[pair]['success'], 'Loss ', pairs[pair]['loss']);
@@ -265,7 +271,7 @@ function closeShortPosition(pair, close){
 
 
 function getPositionSize(close){ //parece otimizado Kelly Criterium
-  accountRiskCoeff = pairs[pair]['accountRisk'];
+
   if(pairs[pair]['profit'].length >= 50){
     var w = pairs[pair]['success']/(pairs[pair]['success']+pairs[pair]['loss']);
     
@@ -297,7 +303,7 @@ function getPositionSize(close){ //parece otimizado Kelly Criterium
 
   }
 
-  var kellyPositionSize = (bfx.initAmount * pairs[pair]['kelly'])/close;
+  var kellyPositionSize = (bfx.initAmount * pairs[pair]['kelly']);
 
   var tradeRisk = 0;
   if(close < pairs[pair]['stopLossPrice']){ //Open long position
@@ -309,16 +315,16 @@ function getPositionSize(close){ //parece otimizado Kelly Criterium
 
   var tradeRiskCoeff = 0;
 
-  if(tradeRisk > accountRiskCoeff){
-    tradeRiskCoeff = (accountRiskCoeff/tradeRisk)/(pairsArray.length - openedPositions);
+  if(tradeRisk > pairs[pair]['accountRisk']){
+    tradeRiskCoeff = (pairs[pair]['accountRisk']/tradeRisk)/(pairsArray.length - openedPositions);
   }else{
-    tradeRiskCoeff = (tradeRisk/accountRiskCoeff)/(pairsArray.length - openedPositions);
+    tradeRiskCoeff = (tradeRisk/pairs[pair]['accountRisk'])/(pairsArray.length - openedPositions);
   }
 
-  var riskPositionSize = (bfx.initAmount*tradeRiskCoeff)/close;
+  var riskPositionSize = (bfx.initAmount*tradeRiskCoeff);
 
   var positionSize = Math.min(kellyPositionSize, riskPositionSize);
-
+  //console.log(riskPositionSize);
   // console.log(pair, "Kelly position coeff ", pairs[pair]['kelly'], "trade risk coeff ", 
   //   tradeRiskCoeff);
   // if(kellyPositionSize > riskPositionSize){

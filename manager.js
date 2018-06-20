@@ -60,10 +60,10 @@ Manager.prototype.runBot = function(){
   for(pair of pairsArray){
     marketData[pair] = JSON.parse(fs.readFileSync(__dirname+'/datasets/BFX_'+pair+'_30m.json', 'utf8'));
   }
-
+  console.log(marketData[pairsArray[0]].length);
   for(i=0; i<marketData[pairsArray[0]].length; i++){
     for(pair in marketData){
-      updateIndicators(pair, marketData[pair][i])  
+      updateIndicators(pair, marketData[pair][i]);
     }
   }
 
@@ -72,7 +72,6 @@ Manager.prototype.runBot = function(){
   //     calculateMA(pair, candle[2])
   //   }
   // }
-
 }
 
 function updateIndicators(pair, price){
