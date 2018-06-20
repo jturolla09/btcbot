@@ -58,7 +58,7 @@ function Manager(){
 Manager.prototype.runBot = function(){
   var marketData = {};
   for(pair of pairsArray){
-    marketData[pair] = JSON.parse(fs.readFileSync(__dirname+'/datasets/BFX_'+pair+'_30m.json', 'utf8'));
+    marketData[pair] = JSON.parse(fs.readFileSync('../datasets/BFX_'+pair+'_30m.json', 'utf8'));
   }
   console.log(marketData[pairsArray[0]].length);
   for(i=0; i<marketData[pairsArray[0]].length; i++){
