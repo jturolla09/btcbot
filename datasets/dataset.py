@@ -3,11 +3,11 @@ import time
 
 start_date = 1483228800 * 1000 #Jan 01 2017
 pair = 'XMRBTC'
-timeframe = '30m'
+timeframe = '5m'
 
 final_data = []
 
-for _ in range(0,10):
+for _ in range(10000):
     url = 'https://api.bitfinex.com/v2/candles/trade:' + timeframe + ':t' + pair + '/hist?sort=1&limit=1000&start=' + str(start_date)
 
     r = requests.get(url)
@@ -19,9 +19,10 @@ for _ in range(0,10):
 
     print(time.ctime() + " " + str(len(temp_data)))
 
-    time.sleep(6)
+    if len(temp_data) < 1000:
+    	break
 
-print(final_data)
+    time.sleep(6)
 
 with open ('BFX_' + pair + '_' + timeframe + '.json', 'w') as f:
     f.write(str(final_data))
