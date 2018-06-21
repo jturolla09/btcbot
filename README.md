@@ -1,5 +1,5 @@
 # Personal Crypto trading bot
-#--------------- BLADE-RUNNER RESULTS -------------------
+--------------- BLADE-RUNNER RESULTS -------------------
  
 DSHBTC Profit:  14.15216439608107
 DSHBTC AVG Profit per Trade:  0.7466026480450916 %
