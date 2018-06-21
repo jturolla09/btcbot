@@ -10,8 +10,8 @@ var pairs = {};
 
 const accountRiskCoeffs = [0.01, 0.02, 0.03]; //done
 
-const EMA10s = [5,8,10,12,14];
-const EMA21s = [8,14,21,25];
+const EMA10s = [5,8,9,10,14];
+const EMA21s = [6,8,14,21,25];
 const adxPeriods = [5, 10, 15,20,25]; //done
 const trendStrengths = [1, 5,10,25]; //done
 const atrPeriods = [5,6,8,10,12,14]; //done
@@ -78,7 +78,7 @@ function initPairs(adxPeriod, accountRiskCoeff, trendStrength, atrPeriod, EMA10,
 Manager.prototype.runBot = function(){
   var marketData = {};
   for(pair of pairsArray){
-    marketData[pair] = JSON.parse(fs.readFileSync('../datasets/BFX_'+pair+'_30m.json', 'utf8'));
+    marketData[pair] = JSON.parse(fs.readFileSync('../datasets/BFX_'+pair+'_1h.json', 'utf8'));
   }
   for(atrPeriod of atrPeriods){
     for(EMA21 of EMA21s){

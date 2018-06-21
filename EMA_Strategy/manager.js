@@ -11,11 +11,11 @@ var pairs = {};
 
 const accountRiskCoeff = 0.03;
 const maPeriods = 50;
-const adxPeriods = 25;
-const trendStrength = 25;
-const atrPeriods = 14;
+const adxPeriods = 20;
+const trendStrength = 10;
+const atrPeriods = 8;
 const EMA10 = 14;
-const EMA21 = 8;
+const EMA21 = 25;
 
 var openedPositions = 0;
 var success = 0;
@@ -67,7 +67,7 @@ function Manager(){
 Manager.prototype.runBot = function(){
   var marketData = {};
   for(pair of pairsArray){
-    marketData[pair] = JSON.parse(fs.readFileSync('../datasets/BFX_'+pair+'_30m.json', 'utf8'));
+    marketData[pair] = JSON.parse(fs.readFileSync('../datasets/BFX_'+pair+'_1h.json', 'utf8'));
   }
 
   for(i=0; i<marketData[pairsArray[0]].length; i++){
