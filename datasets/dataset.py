@@ -2,8 +2,8 @@ import requests
 import time
 
 start_date = 1483228800 * 1000 #Jan 01 2017
-pair = 'XMRBTC'
-timeframe = '5m'
+pair = 'DSHBTC'
+timeframe = '1h'
 
 final_data = []
 
@@ -15,7 +15,7 @@ for _ in range(10000):
     temp_data = r.json()
     final_data = final_data + temp_data
 
-    start_date = temp_data[len(temp_data)-1][0] + 5 * 60 * 1000
+    start_date = temp_data[len(temp_data)-1][0] + 60 * 60 * 1000
 
     print(time.ctime() + " " + str(len(temp_data)))
 
