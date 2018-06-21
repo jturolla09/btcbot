@@ -67,6 +67,25 @@ Manager.prototype.runBot = function(){
     }
   }
 
+  console.log('--------------- BLADE-RUNNER RESULTS -------------------');
+  console.log(' ');
+  for(pair in marketData){
+    var totProfit = 0;
+    var totProfitPct = 0;
+    for(i = 0; i<pairs[pair]['profit'].length; i++){
+      totProfit += pairs[pair]['profit'][i];
+      totProfitPct += pairs[pair]['profitPct'][i];
+    }
+    totProfitPct = 100*((totProfitPct/(pairs[pair]['profitPct'].length))-1);
+    console.log(pair, 'Profit: ', totProfit);
+    console.log(pair, 'AVG Profit per Trade: ', totProfitPct, '%');
+  }
+  console.log(' ');
+  console.log('Wins: ', success, 'Losses: ', loss);
+  console.log('Total earns: ', (bfx.initAmount-100));
+  console.log(' ');
+  console.log('Bot Eficiency: ', (success/(success+loss))*100, '%');
+
   // for( pair in marketData){
   //   for(candle of marketData[pair]){
   //     calculateMA(pair, candle[2])
