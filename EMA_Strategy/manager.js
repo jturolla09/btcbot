@@ -2,17 +2,20 @@ fs = require('fs');
 const SMA = require('technicalindicators').SMA;
 const ADX = require('technicalindicators').ADX;
 const ATR = require('technicalindicators').ATR;
+const EMA = require('technicalindicators').EMA
 const pairsArray = ['DSHBTC', 'XMRBTC', 'ETHBTC'];
 const BFXTrade = require('./BfxTrade');
 
 var bfx = new BFXTrade();
 var pairs = {};
 
-const accountRiskCoeff = 0.01;
+const accountRiskCoeff = 0.03;
 const maPeriods = 50;
-const adxPeriods = 20;
-const trendStrength = 10;
-const atrPeriods = 5;
+const adxPeriods = 25;
+const trendStrength = 25;
+const atrPeriods = 14;
+const EMA10 = 14;
+const EMA21 = 8;
 
 var openedPositions = 0;
 var success = 0;
@@ -31,6 +34,8 @@ function Manager(){
   for(pair of pairsArray){
     pairs[pair]={
       ma: new SMA({period : maPeriods, values :[]}),
+      ema10: new SMA({period: EMA10, values: []}),
+      ema21: new SMA({period: EMA21, values: []}),
       maValue: 0,
       prevMaValue: 0,
       prevClose: 0,
@@ -49,7 +54,11 @@ function Manager(){
       profitPct: [],
       kelly: 0.25,
       coinAmount: 0,
-      creditAmount: 0
+      creditAmount: 0,
+      EMA10Value: 0,
+      EMA21Value:0,
+      prev10Value: 0,
+      prev21Value:0
     }
   }
 }
@@ -60,13 +69,31 @@ Manager.prototype.runBot = function(){
   for(pair of pairsArray){
     marketData[pair] = JSON.parse(fs.readFileSync('../datasets/BFX_'+pair+'_30m.json', 'utf8'));
   }
-  console.log(marketData[pairsArray[0]].length);
+
   for(i=0; i<marketData[pairsArray[0]].length; i++){
     for(pair in marketData){
       updateIndicators(pair, marketData[pair][i]);
     }
   }
 
+  console.log('--------------- INVERTED-EMA-STRATEGY RESULTS -------------------');
+  console.log(' ');
+  for(pair in marketData){
+    var totProfit = 0;
+    var totProfitPct = 0;
+    for(i = 0; i<pairs[pair]['profit'].length; i++){
+      totProfit += pairs[pair]['profit'][i];
+      totProfitPct += pairs[pair]['profitPct'][i];
+    }
+    totProfitPct = 100*((totProfitPct/(pairs[pair]['profitPct'].length))-1);
+    console.log(pair, 'Profit: ', totProfit);
+    console.log(pair, 'AVG Profit per Trade: ', totProfitPct, '%');
+  }
+  console.log(' ');
+  console.log('Wins: ', success, 'Losses: ', loss);
+  console.log('Total earns: ', (bfx.initAmount-100));
+  console.log(' ');
+  console.log('Bot Eficiency: ', (success/(success+loss))*100, '%');
   // for( pair in marketData){
   //   for(candle of marketData[pair]){
   //     calculateMA(pair, candle[2])
@@ -75,15 +102,21 @@ Manager.prototype.runBot = function(){
 }
 
 function updateIndicators(pair, price){
-  pairs[pair]['prevMaValue'] = pairs[pair]['maValue'];
+  //pairs[pair]['prevMaValue'] = pairs[pair]['maValue'];
 
-  pairs[pair]['maValue'] = pairs[pair]['ma'].nextValue(price[2]);
+  pairs[pair]['prev10Value'] = pairs[pair]['EMA10Value'];
+  pairs[pair]['prev21Value'] = pairs[pair]['EMA21Value'];
+  //pairs[pair]['maValue'] = pairs[pair]['ma'].nextValue(price[2]);
+  pairs[pair]['EMA10Value'] = pairs[pair]['ema10'].nextValue(price[2]);
+  pairs[pair]['EMA21Value'] = pairs[pair]['ema21'].nextValue(price[2]);
+
   pairs[pair]['adxValue'] = pairs[pair]['adx'].nextValue({close: price[2] , high: price[3],
     low: price[4]});
   pairs[pair]['atrValue'] = pairs[pair]['atr'].nextValue({close: price[2] , high: price[3],
     low: price[4]});
 
-  if(pairs[pair]['maValue'] != undefined &&
+  if(pairs[pair]['EMA10Value'] != undefined &&
+    pairs[pair]['EMA21Value'] != undefined &&
     pairs[pair]['adxValue'] != undefined &&
     pairs[pair]['atrValue'] != undefined){
     findTradeOpportunity(pair, price[2]);
@@ -96,45 +129,52 @@ function updateIndicators(pair, price){
 function findTradeOpportunity(pair, close){
   // Se eu nao tenho ordem aberta:
   if(!pairs[pair]['long'] && !pairs[pair]['short']){
-    if(pairs[pair]['prevClose'] < pairs[pair]['prevMaValue'] 
-      && close > pairs[pair]['maValue'] && pairs[pair]['adxValue'].adx > trendStrength){
+    if(pairs[pair]['prev10Value'] <= pairs[pair]['prev21Value'] 
+      && pairs[pair]['EMA10Value'] > pairs[pair]['EMA21Value'] && pairs[pair]['adxValue'].adx > trendStrength){
       openLongPosition(pair, close);
-    } else if(pairs[pair]['prevClose'] > pairs[pair]['prevMaValue'] 
-      && close < pairs[pair]['maValue'] && pairs[pair]['adxValue'].adx > trendStrength){
+    } else if(pairs[pair]['prev10Value'] >= pairs[pair]['prev21Value'] 
+      && pairs[pair]['EMA10Value'] < pairs[pair]['EMA21Value'] && pairs[pair]['adxValue'].adx > trendStrength){
       openShortPosition(pair, close);
     }
 
   //se eu tenho ordem aberta de LONG
   }else if(pairs[pair]['long']){
 
-      if(close < pairs[pair]['maValue'] && close > 1.004*pairs[pair]['entryPrice']){
+      if(pairs[pair]['prev10Value'] >= pairs[pair]['prev21Value'] 
+      && pairs[pair]['EMA10Value'] < pairs[pair]['EMA21Value'] && close >= 1.004*pairs[pair]['entryPrice']){
         success++;
         pairs[pair]['success']++;
         closeLongPosition(pair, close);
+        openShortPosition(pair, close);
 
       //StopLoss
-      }else if(close < pairs[pair]['stopLossPrice']){
+      }else if(close <= pairs[pair]['stopLossPrice']){
         loss++;
         pairs[pair]['loss']++;
         closeLongPosition(pair, pairs[pair]['stopLossPrice']);
+
       }
 
   //se eu tenho ordem aberta de SHORT
   }else if(pairs[pair]['short']){
 
-      if(close > pairs[pair]['maValue'] && close < 0.996*pairs[pair]['entryPrice']){
+      if(pairs[pair]['prev10Value'] <= pairs[pair]['prev21Value'] 
+      && pairs[pair]['EMA10Value'] > pairs[pair]['EMA21Value'] && close <= 0.996*pairs[pair]['entryPrice']){
         success++;
         pairs[pair]['success']++;
         closeShortPosition(pair, close);
+        openLongPosition(pair, close);
 
       //Stoploss
-      }else if(close > pairs[pair]['stopLossPrice']){
+      }else if(close >= pairs[pair]['stopLossPrice']){
         loss++;
         pairs[pair]['loss']++;
         closeShortPosition(pair, pairs[pair]['stopLossPrice']);
+
       }
 
   }
+
 }
 
 //Position Manager

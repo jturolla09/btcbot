@@ -8,11 +8,12 @@ const BFXTrade = require('./BfxTrade');
 var bfx = new BFXTrade();
 var pairs = {};
 
-const accountRiskCoeffs = [0.01, 0.02, 0.03, 0.04, 0.05]; //done
+const accountRiskCoeffs = [0.01, 0.02, 0.03]; //done
 
-const maPeriods = [10,20,50,100,200];
-const adxPeriods = [5, 10, 15,20,25,30]; //done
-const trendStrengths = [1, 5,10,25,30]; //done
+const EMA10s = [5,8,10,12,14];
+const EMA21s = [8,14,21,25];
+const adxPeriods = [5, 10, 15,20,25]; //done
+const trendStrengths = [1, 5,10,25]; //done
 const atrPeriods = [5,6,8,10,12,14]; //done
 
 var openedPositions = 0;
@@ -26,6 +27,8 @@ var bestRisk = 0;
 var maxAmount = 0;
 var bestStrength = 0;
 var bestATR = 0;
+var bestEMA10 = 0;
+var bestEMA21 = 0;
 // marketData returns:
 // 0 = timestamp
 // 1 = open price
@@ -39,11 +42,12 @@ function Manager(){
   
 }
 
-function initPairs(maPeriod, adxPeriod, accountRiskCoeff, trendStrength, atrPeriod){
+function initPairs(adxPeriod, accountRiskCoeff, trendStrength, atrPeriod, EMA10, EMA21){
 
   for(pair of pairsArray){
     pairs[pair]={
-      ma: new SMA({period : maPeriod, values :[]}),
+      ema10: new SMA({period: EMA10, values: []}),
+      ema21: new SMA({period: EMA21, values: []}),
       maValue: 0,
       prevMaValue: 0,
       prevClose: 0,
@@ -62,7 +66,11 @@ function initPairs(maPeriod, adxPeriod, accountRiskCoeff, trendStrength, atrPeri
       profitPct: [],
       kelly: 0.25,
       accountRisk: accountRiskCoeff,
-      trend: trendStrength
+      trend: trendStrength,
+      EMA10Value: 0,
+      EMA21Value:0,
+      prev10Value: 0,
+      prev21Value:0
     }
   }
 }
@@ -73,57 +81,61 @@ Manager.prototype.runBot = function(){
     marketData[pair] = JSON.parse(fs.readFileSync('../datasets/BFX_'+pair+'_30m.json', 'utf8'));
   }
   for(atrPeriod of atrPeriods){
-    for(trendStrength of trendStrengths){
-      for(accountRiskCoeff of accountRiskCoeffs){
-        for(adxPeriod of adxPeriods){
-          for(maPeriod of maPeriods){
-            initPairs(maPeriod, adxPeriod, accountRiskCoeff, trendStrength, atrPeriod);
-            openedPositions = 0;
-            success = 0;
-            loss = 0;
-            bfx.initAmount = 100;
-            bfx.reserve = {};
-            // console.log("Starting backtest");
-            // console.log("----------------------------------------------------------------");
-            for(i=0; i<marketData[pairsArray[0]].length; i++){
-              for(pair in marketData){
-                updateIndicators(pair, marketData[pair][i]);  
+    for(EMA21 of EMA21s){
+      for(EMA10 of EMA10s){
+        for(trendStrength of trendStrengths){
+          for(accountRiskCoeff of accountRiskCoeffs){
+            for(adxPeriod of adxPeriods){
+              initPairs(adxPeriod, accountRiskCoeff, trendStrength, atrPeriod, EMA10, EMA21);
+              openedPositions = 0;
+              success = 0;
+              loss = 0;
+              bfx.initAmount = 100;
+              bfx.reserve = {};
+              // console.log("Starting backtest");
+              // console.log("----------------------------------------------------------------");
+              for(i=0; i<marketData[pairsArray[0]].length; i++){
+                for(pair in marketData){
+                  updateIndicators(pair, marketData[pair][i]);  
+                }
+              }
+
+              // if(openedPositions == 0){
+              //   finalAmount = bfx.initAmount;
+              // }else{
+              //   finalAmount = bfx.initAmount;
+              //   for(pair in pairs){
+              //     finalAmount += pairs[pair]['entryAmount'];
+              //   }
+              // }
+
+              finalAmount = bfx.initAmount;
+
+              if(finalAmount > maxAmount){
+                //bestMA = maPeriod;
+                bestADX = adxPeriod;
+                bestRisk = accountRiskCoeff;
+                maxAmount = finalAmount;
+                bestStrength = trendStrength;
+                bestATR = atrPeriod;
+                bestEMA10 = EMA10;
+                bestEMA21 = EMA21;
+
+                //console.log("bestMA", bestMA);
+                console.log("bestRISK", bestRisk);
+                console.log("bestADX", bestADX);
+                console.log("bestStrength", bestStrength);
+                console.log("bestATR", bestATR);
+                console.log('bestEMA10', bestEMA10);
+                console.log('bestEMA21', bestEMA21);
+                console.log("maxAmount", maxAmount);
               }
             }
-
-            // if(openedPositions == 0){
-            //   finalAmount = bfx.initAmount;
-            // }else{
-            //   finalAmount = bfx.initAmount;
-            //   for(pair in pairs){
-            //     finalAmount += pairs[pair]['entryAmount'];
-            //   }
-            // }
-
-            finalAmount = bfx.initAmount;
-
-            if(finalAmount > maxAmount){
-              bestMA = maPeriod;
-              bestADX = adxPeriod;
-              bestRisk = accountRiskCoeff;
-              maxAmount = finalAmount;
-              bestStrength = trendStrength;
-              bestATR = atrPeriod;
-
-              console.log("bestMA", bestMA);
-              console.log("bestATR", bestATR);
-              console.log("bestADX", bestADX);
-              console.log("bestRISK", bestRisk);
-              console.log("bestStrength", bestStrength);
-              console.log("maxAmount", maxAmount);
-            }
-
           }
         }
       }
     }
   }
-
   // for( pair in marketData){
   //   for(candle of marketData[pair]){
   //     calculateMA(pair, candle[2])
@@ -133,9 +145,14 @@ Manager.prototype.runBot = function(){
 }
 
 function updateIndicators(pair, price){
-  pairs[pair]['prevMaValue'] = pairs[pair]['maValue'];
+  //pairs[pair]['prevMaValue'] = pairs[pair]['maValue'];
 
-  pairs[pair]['maValue'] = pairs[pair]['ma'].nextValue(price[2]);
+  pairs[pair]['prev10Value'] = pairs[pair]['EMA10Value'];
+  pairs[pair]['prev21Value'] = pairs[pair]['EMA21Value'];
+  //pairs[pair]['maValue'] = pairs[pair]['ma'].nextValue(price[2]);
+  pairs[pair]['EMA10Value'] = pairs[pair]['ema10'].nextValue(price[2]);
+  pairs[pair]['EMA21Value'] = pairs[pair]['ema21'].nextValue(price[2]);
+
   pairs[pair]['adxValue'] = pairs[pair]['adx'].nextValue({close: price[2] , high: price[3],
     low: price[4]});
   pairs[pair]['atrValue'] = pairs[pair]['atr'].nextValue({close: price[2] , high: price[3],
@@ -154,42 +171,47 @@ function updateIndicators(pair, price){
 function findTradeOpportunity(pair, close){
   // Se eu nao tenho ordem aberta:
   if(!pairs[pair]['long'] && !pairs[pair]['short']){
-    if(pairs[pair]['prevClose'] < pairs[pair]['prevMaValue'] 
-      && close > pairs[pair]['maValue'] && pairs[pair]['adxValue'].adx > pairs[pair]['trend']){
+    if(pairs[pair]['prev10Value'] <= pairs[pair]['prev21Value'] 
+      && pairs[pair]['EMA10Value'] > pairs[pair]['EMA21Value'] && pairs[pair]['adxValue'].adx > pairs[pair]['trend']){
       openLongPosition(pair, close);
-    } else if(pairs[pair]['prevClose'] > pairs[pair]['prevMaValue'] 
-      && close < pairs[pair]['maValue'] && pairs[pair]['adxValue'].adx > pairs[pair]['trend']){
+    } else if(pairs[pair]['prev10Value'] >= pairs[pair]['prev21Value'] 
+      && pairs[pair]['EMA10Value'] < pairs[pair]['EMA21Value'] && pairs[pair]['adxValue'].adx > pairs[pair]['trend']){
       openShortPosition(pair, close);
     }
 
   //se eu tenho ordem aberta de LONG
   }else if(pairs[pair]['long']){
 
-      if(close < pairs[pair]['maValue'] && close > 1.004*pairs[pair]['entryPrice']){
+      if(pairs[pair]['prev10Value'] >= pairs[pair]['prev21Value'] 
+      && pairs[pair]['EMA10Value'] < pairs[pair]['EMA21Value'] && close >= 1.004*pairs[pair]['entryPrice']){
         success++;
         pairs[pair]['success']++;
         closeLongPosition(pair, close);
 
       //StopLoss
-      }else if(close < pairs[pair]['stopLossPrice']){
+      }else if(close <= pairs[pair]['stopLossPrice']){
         loss++;
         pairs[pair]['loss']++;
         closeLongPosition(pair, pairs[pair]['stopLossPrice']);
+
       }
 
   //se eu tenho ordem aberta de SHORT
   }else if(pairs[pair]['short']){
 
-      if(close > pairs[pair]['maValue'] && close < 0.996*pairs[pair]['entryPrice']){
+      if(pairs[pair]['prev10Value'] <= pairs[pair]['prev21Value'] 
+      && pairs[pair]['EMA10Value'] > pairs[pair]['EMA21Value'] && close <= 0.996*pairs[pair]['entryPrice']){
         success++;
         pairs[pair]['success']++;
         closeShortPosition(pair, close);
+        openLongPosition(pair, close);
 
       //Stoploss
-      }else if(close > pairs[pair]['stopLossPrice']){
+      }else if(close >= pairs[pair]['stopLossPrice']){
         loss++;
         pairs[pair]['loss']++;
         closeShortPosition(pair, pairs[pair]['stopLossPrice']);
+
       }
 
   }

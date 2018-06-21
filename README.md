@@ -1,5 +1,5 @@
 # Personal Crypto trading bot
---------------- BLADE-RUNNER RESULTS -------------------
+--------------- BLADE-RUNNER RESULTS -------------------  
  
 DSHBTC Profit:  21.926290886387818  
 DSHBTC AVG Profit per Trade:  0.5279535471277796 %  
@@ -13,4 +13,17 @@ Total earns:  65.96132975151426
  
 Bot Eficiency:  44.89402697495183 %  
 
+--------------- INVERTED-EMA-STRATEGY RESULTS -------------------  
+ 
+DSHBTC Profit:  80.20359813568187  
+DSHBTC AVG Profit per Trade:  0.942688404067149 %  
+XMRBTC Profit:  60.00410299483398  
+XMRBTC AVG Profit per Trade:  0.9525295175997872 %  
+ETHBTC Profit:  34.19363057118993  
+ETHBTC AVG Profit per Trade:  0.5394842939935751 %  
+ 
+Wins:  845 Losses:  435  
+Total earns:  75.1441394815329  
+ 
+Bot Eficiency:  66.015625 %  
 
