@@ -70,7 +70,7 @@ function initPairs(maPeriod, adxPeriod, accountRiskCoeff, trendStrength, atrPeri
 Manager.prototype.runBot = function(){
   var marketData = {};
   for(pair of pairsArray){
-    marketData[pair] = JSON.parse(fs.readFileSync('../datasets/BFX_'+pair+'_30m.json', 'utf8'));
+    marketData[pair] = JSON.parse(fs.readFileSync('../datasets/BFX_'+pair+'_1h.json', 'utf8'));
   }
   for(atrPeriod of atrPeriods){
     for(trendStrength of trendStrengths){
@@ -169,6 +169,7 @@ function findTradeOpportunity(pair, close){
         success++;
         pairs[pair]['success']++;
         closeLongPosition(pair, close);
+        //openShortPosition(pair, close);
 
       //StopLoss
       }else if(close < pairs[pair]['stopLossPrice']){
@@ -184,6 +185,7 @@ function findTradeOpportunity(pair, close){
         success++;
         pairs[pair]['success']++;
         closeShortPosition(pair, close);
+        //openLongPosition(pair, close);
 
       //Stoploss
       }else if(close > pairs[pair]['stopLossPrice']){

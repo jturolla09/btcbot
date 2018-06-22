@@ -13,8 +13,8 @@ const accountRiskCoeff = 0.03;
 const maPeriods = 50;
 const adxPeriods = 20;
 const trendStrength = 10;
-const atrPeriods = 8;
-const EMA10 = 14;
+const atrPeriods = 14;
+const EMA10 = 8;
 const EMA21 = 25;
 
 var openedPositions = 0;
@@ -145,7 +145,7 @@ function findTradeOpportunity(pair, close){
         success++;
         pairs[pair]['success']++;
         closeLongPosition(pair, close);
-        openShortPosition(pair, close);
+        //openShortPosition(pair, close);
 
       //StopLoss
       }else if(close <= pairs[pair]['stopLossPrice']){
@@ -163,7 +163,7 @@ function findTradeOpportunity(pair, close){
         success++;
         pairs[pair]['success']++;
         closeShortPosition(pair, close);
-        openLongPosition(pair, close);
+        //openLongPosition(pair, close);
 
       //Stoploss
       }else if(close >= pairs[pair]['stopLossPrice']){

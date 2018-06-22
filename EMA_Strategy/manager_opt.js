@@ -204,7 +204,7 @@ function findTradeOpportunity(pair, close){
         success++;
         pairs[pair]['success']++;
         closeShortPosition(pair, close);
-        openLongPosition(pair, close);
+        //openLongPosition(pair, close);
 
       //Stoploss
       }else if(close >= pairs[pair]['stopLossPrice']){

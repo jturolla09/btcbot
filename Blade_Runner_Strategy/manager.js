@@ -8,11 +8,11 @@ const BFXTrade = require('./BfxTrade');
 var bfx = new BFXTrade();
 var pairs = {};
 
-const accountRiskCoeff = 0.01;
+const accountRiskCoeff = 0.03;
 const maPeriods = 50;
 const adxPeriods = 20;
 const trendStrength = 10;
-const atrPeriods = 5;
+const atrPeriods = 14;
 
 var openedPositions = 0;
 var success = 0;
@@ -58,7 +58,7 @@ function Manager(){
 Manager.prototype.runBot = function(){
   var marketData = {};
   for(pair of pairsArray){
-    marketData[pair] = JSON.parse(fs.readFileSync('../datasets/BFX_'+pair+'_30m.json', 'utf8'));
+    marketData[pair] = JSON.parse(fs.readFileSync('../datasets/BFX_'+pair+'_1h.json', 'utf8'));
   }
   console.log(marketData[pairsArray[0]].length);
   for(i=0; i<marketData[pairsArray[0]].length; i++){
@@ -130,6 +130,7 @@ function findTradeOpportunity(pair, close){
         success++;
         pairs[pair]['success']++;
         closeLongPosition(pair, close);
+        //openShortPosition(pair, close);
 
       //StopLoss
       }else if(close < pairs[pair]['stopLossPrice']){
@@ -145,7 +146,7 @@ function findTradeOpportunity(pair, close){
         success++;
         pairs[pair]['success']++;
         closeShortPosition(pair, close);
-
+        //openLongPosition(pair, close);
       //Stoploss
       }else if(close > pairs[pair]['stopLossPrice']){
         loss++;

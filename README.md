@@ -13,7 +13,23 @@ Total earns:  65.96132975151426
  
 Bot Eficiency:  44.89402697495183 %  
 
---------------- INVERTED-EMA-STRATEGY RESULTS 30 MINUTES -------------------  
+
+--------------- BLADE-RUNNER RESULTS 1 HOUR -------------------
+ 
+DSHBTC Profit:  26.8955712448083  
+DSHBTC AVG Profit per Trade:  1.3060749060310295 %  
+XMRBTC Profit:  0.19655324194100932  
+XMRBTC AVG Profit per Trade:  0.3841769716437904 %  
+ETHBTC Profit:  123.84630874645862  
+ETHBTC AVG Profit per Trade:  3.0737352624411907 %  
+ 
+Wins:  242 Losses:  289  
+Total earns:  124.84743158305463  
+ 
+Bot Eficiency:  45.5743879472693 %  
+
+
+--------------- EMA-STRATEGY RESULTS 30 MINUTES -------------------  
  
 DSHBTC Profit:  80.20359813568187  
 DSHBTC AVG Profit per Trade:  0.942688404067149 %  
@@ -27,17 +43,18 @@ Total earns:  75.1441394815329
  
 Bot Eficiency:  66.015625 %  
 
---------------- INVERTED-EMA-STRATEGY RESULTS 1 HOUR -------------------  
+--------------- EMA-STRATEGY RESULTS 1 HOUR-------------------
  
-DSHBTC Profit:  19.99435246072487  
-DSHBTC AVG Profit per Trade:  0.8138276736467276 %  
-XMRBTC Profit:  65.66475122192662  
-XMRBTC AVG Profit per Trade:  1.245258178357811 %  
-ETHBTC Profit:  195.16021646511803  
-ETHBTC AVG Profit per Trade:  2.158305734676791 %  
-   
-Wins:  399 Losses:  390  
-Total earns:  205.159875638298  
-   
-Bot Eficiency:  50.57034220532319 %  
+DSHBTC Profit:  71.12330229177374  
+DSHBTC AVG Profit per Trade:  2.1813989246860066 %  
+XMRBTC Profit:  29.793395930200255  
+XMRBTC AVG Profit per Trade:  1.0562978467464346 %  
+ETHBTC Profit:  211.84687912306885  
+ETHBTC AVG Profit per Trade:  3.094973148933655 %  
+ 
+Wins:  282 Losses:  294  
+Total earns:  268.37985426533277  
+ 
+Bot Eficiency:  48.95833333333333 %
+
 
