@@ -2,9 +2,8 @@ import requests
 import time
 
 start_date = 1483228800 * 1000 #Jan 01 2017
-pairs = ['BCHBTC', 'ZECBTC', 'ETCBTC', 'XRPBTC', 'TRXBTC', 'EOSBTC', 'LTCBTC', 
-        'IOTBTC', 'ZRXBTC', 'BTGBTC', 'BFTBTC', 'NEOBTC', 'BATBTC', 'DADBTC', 'OMGBTC']
-timeframes = ['6h', '12h', '1m']
+pairs = ['LTCBTC', 'IOTBTC', 'ZRXBTC', 'BTGBTC', 'BFTBTC', 'NEOBTC', 'BATBTC', 'DADBTC', 'OMGBTC']
+timeframes = ['1m']
 interval = 0;
 
 for timeframe in timeframes:
@@ -35,11 +34,9 @@ for timeframe in timeframes:
             start_date = temp_data[len(temp_data)-1][0] + (interval * 1000)
 
             print(time.ctime() + " " + str(len(temp_data)))
-
+            time.sleep(8)
             if len(temp_data) < 1000:
             	break
-
-            time.sleep(7)
 
         with open ('BFX_' + pair + '_' + timeframe + '.json', 'w') as f:
             f.write(str(final_data))
