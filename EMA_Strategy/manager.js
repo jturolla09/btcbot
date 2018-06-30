@@ -3,13 +3,13 @@ const SMA = require('technicalindicators').SMA;
 const ADX = require('technicalindicators').ADX;
 const ATR = require('technicalindicators').ATR;
 const EMA = require('technicalindicators').EMA
-const pairsArray = ['DSHBTC', 'XMRBTC', 'ETHBTC'];
+const pairsArray = ['BCHBTC', 'BTGBTC', 'DSHBTC', 'EOSBTC', 'ETHBTC', 'IOTBTC', 'NEOBTC', 'OMGBTC', 'TRXBTC', 'XRPBTC'];
 const BFXTrade = require('./BfxTrade');
 
 var bfx = new BFXTrade();
 var pairs = {};
 
-const accountRiskCoeff = 0.03;
+const accountRiskCoeff = 0.08;
 const maPeriods = 50;
 const adxPeriods = 20;
 const trendStrength = 10;
@@ -70,9 +70,22 @@ Manager.prototype.runBot = function(){
     marketData[pair] = JSON.parse(fs.readFileSync('../datasets/BFX_'+pair+'_1h.json', 'utf8'));
   }
 
-  for(i=0; i<marketData[pairsArray[0]].length; i++){
+  // Find bigger data, DELETE FOR REAL TIME
+  var index = 0;
+  var biggerIndex = 0;
+  var biggerData = 0;
+  for(pair of pairsArray){
+    if(marketData[pair].length > biggerData){
+      biggerData = marketData[pair].length;
+      biggerIndex = index;
+    }
+    index++;
+  }
+
+  for(i=0; i<marketData[pairsArray[biggerIndex]].length; i++){
     for(pair in marketData){
-      updateIndicators(pair, marketData[pair][i]);
+      if(marketData[pair][i] != undefined)
+        updateIndicators(pair, marketData[pair][i]);
     }
   }
 
@@ -103,7 +116,6 @@ Manager.prototype.runBot = function(){
 
 function updateIndicators(pair, price){
   //pairs[pair]['prevMaValue'] = pairs[pair]['maValue'];
-
   pairs[pair]['prev10Value'] = pairs[pair]['EMA10Value'];
   pairs[pair]['prev21Value'] = pairs[pair]['EMA21Value'];
   //pairs[pair]['maValue'] = pairs[pair]['ma'].nextValue(price[2]);

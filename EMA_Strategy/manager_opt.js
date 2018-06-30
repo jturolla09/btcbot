@@ -2,19 +2,19 @@ fs = require('fs');
 const SMA = require('technicalindicators').SMA;
 const ADX = require('technicalindicators').ADX;
 const ATR = require('technicalindicators').ATR;
-const pairsArray = ['DSHBTC', 'XMRBTC', 'ETHBTC'];
+const pairsArray = ['BCHBTC', 'BTGBTC', 'DSHBTC', 'EOSBTC', 'ETHBTC', 'IOTBTC', 'NEOBTC', 'OMGBTC', 'TRXBTC', 'ZECBTC'];
 const BFXTrade = require('./BfxTrade');
 
 var bfx = new BFXTrade();
 var pairs = {};
 
-const accountRiskCoeffs = [0.01, 0.02, 0.03]; //done
+const accountRiskCoeffs = [0.01, 0.02, 0.03, 0.05, 0.08, 0.1]; //done
 
-const EMA10s = [5,8,9,10,14];
-const EMA21s = [6,8,14,21,25];
-const adxPeriods = [5, 10, 15,20,25]; //done
-const trendStrengths = [1, 5,10,25]; //done
-const atrPeriods = [5,6,8,10,12,14]; //done
+const EMA10s = [5,8,9,10,14,18,22]; //done
+const EMA21s = [6,8,14,21,25,30,35]; //done
+const adxPeriods = [5,10,15,20,25,30,40]; //done
+const trendStrengths = [1,5,10,25,35]; //done
+const atrPeriods = [5,6,8,10,12,14,18,25]; //done
 
 var openedPositions = 0;
 var success = 0;
@@ -80,6 +80,19 @@ Manager.prototype.runBot = function(){
   for(pair of pairsArray){
     marketData[pair] = JSON.parse(fs.readFileSync('../datasets/BFX_'+pair+'_1h.json', 'utf8'));
   }
+
+  // Find bigger data, DELETE FOR REAL TIME
+  var index = 0;
+  var biggerIndex = 0;
+  var biggerData = 0;
+  for(pair of pairsArray){
+    if(marketData[pair].length > biggerData){
+      biggerData = marketData[pair].length;
+      biggerIndex = index;
+    }
+    index++;
+  }
+
   for(atrPeriod of atrPeriods){
     for(EMA21 of EMA21s){
       for(EMA10 of EMA10s){
@@ -94,9 +107,11 @@ Manager.prototype.runBot = function(){
               bfx.reserve = {};
               // console.log("Starting backtest");
               // console.log("----------------------------------------------------------------");
-              for(i=0; i<marketData[pairsArray[0]].length; i++){
+              for(i=0; i<marketData[pairsArray[biggerIndex]].length; i++){
                 for(pair in marketData){
-                  updateIndicators(pair, marketData[pair][i]);  
+                  if(marketData[pair][i] != undefined){
+                    updateIndicators(pair, marketData[pair][i]);  
+                  }
                 }
               }
 

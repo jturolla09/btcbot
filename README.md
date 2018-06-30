@@ -1,5 +1,7 @@
 # Personal Crypto trading bot
---------------- BLADE-RUNNER RESULTS 30 MINUTES -------------------  
+
+# Available Pairs in Datasets: BATBTC, BCHBTC, BFTBTC, BTGBTC, DADBTC, DSHBTC, EOSBTC, ETCBTC, ETHBTC, IOTBTC, LTCBTC, NEOBTC, OMGBTC, TRXBTC, XMRBTC, XRPBTC, ZECBTC, ZRXBTC
+# --------------- BLADE-RUNNER RESULTS 30 MINUTES -------------------  
  
 DSHBTC Profit:  21.926290886387818  
 DSHBTC AVG Profit per Trade:  0.5279535471277796 %  
@@ -14,7 +16,7 @@ Total earns:  65.96132975151426
 Bot Eficiency:  44.89402697495183 %  
 
 
---------------- BLADE-RUNNER RESULTS 1 HOUR -------------------
+# --------------- BLADE-RUNNER RESULTS 1 HOUR -------------------
  
 DSHBTC Profit:  26.8955712448083  
 DSHBTC AVG Profit per Trade:  1.3060749060310295 %  
@@ -29,7 +31,7 @@ Total earns:  124.84743158305463
 Bot Eficiency:  45.5743879472693 %  
 
 
---------------- EMA-STRATEGY RESULTS 30 MINUTES -------------------  
+# --------------- EMA-STRATEGY RESULTS 30 MINUTES -------------------  
  
 DSHBTC Profit:  80.20359813568187  
 DSHBTC AVG Profit per Trade:  0.942688404067149 %  
@@ -43,7 +45,7 @@ Total earns:  75.1441394815329
  
 Bot Eficiency:  66.015625 %  
 
---------------- EMA-STRATEGY RESULTS 1 HOUR-------------------
+# --------------- EMA-STRATEGY RESULTS 1 HOUR-------------------
  
 DSHBTC Profit:  71.12330229177374  
 DSHBTC AVG Profit per Trade:  2.1813989246860066 %  
