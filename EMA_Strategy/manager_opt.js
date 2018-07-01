@@ -8,6 +8,7 @@ const BFXTrade = require('./BfxTrade');
 var bfx = new BFXTrade();
 var pairs = {};
 
+const timeframes = ['1h', '6h', '12h']; //done
 const accountRiskCoeffs = [0.01, 0.02, 0.03, 0.05, 0.08, 0.1]; //done
 
 const EMA10s = [5,8,9,10,14,18,22]; //done
@@ -20,6 +21,7 @@ var openedPositions = 0;
 var success = 0;
 var loss = 0;
 
+var bestTime = 0;
 var finalAmount = 0;
 var bestMA = 0;
 var bestADX = 0;
@@ -76,74 +78,76 @@ function initPairs(adxPeriod, accountRiskCoeff, trendStrength, atrPeriod, EMA10,
 }
 
 Manager.prototype.runBot = function(){
-  var marketData = {};
-  for(pair of pairsArray){
-    marketData[pair] = JSON.parse(fs.readFileSync('../datasets/BFX_'+pair+'_1h.json', 'utf8'));
-  }
-
-  // Find bigger data, DELETE FOR REAL TIME
-  var index = 0;
-  var biggerIndex = 0;
-  var biggerData = 0;
-  for(pair of pairsArray){
-    if(marketData[pair].length > biggerData){
-      biggerData = marketData[pair].length;
-      biggerIndex = index;
+  for(timeframe of timeframes){
+    var marketData = {};
+    for(pair of pairsArray){
+      marketData[pair] = JSON.parse(fs.readFileSync('../datasets/BFX_'+pair+'_'+timeframe+'.json', 'utf8'));
     }
-    index++;
-  }
+    // Find bigger data, DELETE FOR REAL TIME
+    var index = 0;
+    var biggerIndex = 0;
+    var biggerData = 0;
+    for(pair of pairsArray){
+      if(marketData[pair].length > biggerData){
+        biggerData = marketData[pair].length;
+        biggerIndex = index;
+      }
+      index++;
+    }
 
-  for(atrPeriod of atrPeriods){
-    for(EMA21 of EMA21s){
-      for(EMA10 of EMA10s){
-        for(trendStrength of trendStrengths){
-          for(accountRiskCoeff of accountRiskCoeffs){
-            for(adxPeriod of adxPeriods){
-              initPairs(adxPeriod, accountRiskCoeff, trendStrength, atrPeriod, EMA10, EMA21);
-              openedPositions = 0;
-              success = 0;
-              loss = 0;
-              bfx.initAmount = 100;
-              bfx.reserve = {};
-              // console.log("Starting backtest");
-              // console.log("----------------------------------------------------------------");
-              for(i=0; i<marketData[pairsArray[biggerIndex]].length; i++){
-                for(pair in marketData){
-                  if(marketData[pair][i] != undefined){
-                    updateIndicators(pair, marketData[pair][i]);  
+    for(atrPeriod of atrPeriods){
+      for(EMA21 of EMA21s){
+        for(EMA10 of EMA10s){
+          for(trendStrength of trendStrengths){
+            for(accountRiskCoeff of accountRiskCoeffs){
+              for(adxPeriod of adxPeriods){
+                initPairs(adxPeriod, accountRiskCoeff, trendStrength, atrPeriod, EMA10, EMA21);
+                openedPositions = 0;
+                success = 0;
+                loss = 0;
+                bfx.initAmount = 100;
+                bfx.reserve = {};
+                // console.log("Starting backtest");
+                // console.log("----------------------------------------------------------------");
+                for(i=0; i<marketData[pairsArray[biggerIndex]].length; i++){
+                  for(pair in marketData){
+                    if(marketData[pair][i] != undefined){
+                      updateIndicators(pair, marketData[pair][i]);  
+                    }
                   }
                 }
-              }
 
-              // if(openedPositions == 0){
-              //   finalAmount = bfx.initAmount;
-              // }else{
-              //   finalAmount = bfx.initAmount;
-              //   for(pair in pairs){
-              //     finalAmount += pairs[pair]['entryAmount'];
-              //   }
-              // }
+                // if(openedPositions == 0){
+                //   finalAmount = bfx.initAmount;
+                // }else{
+                //   finalAmount = bfx.initAmount;
+                //   for(pair in pairs){
+                //     finalAmount += pairs[pair]['entryAmount'];
+                //   }
+                // }
 
-              finalAmount = bfx.initAmount;
+                finalAmount = bfx.initAmount;
 
-              if(finalAmount > maxAmount){
-                //bestMA = maPeriod;
-                bestADX = adxPeriod;
-                bestRisk = accountRiskCoeff;
-                maxAmount = finalAmount;
-                bestStrength = trendStrength;
-                bestATR = atrPeriod;
-                bestEMA10 = EMA10;
-                bestEMA21 = EMA21;
+                if(finalAmount > maxAmount){
+                  //bestMA = maPeriod;
+                  bestADX = adxPeriod;
+                  bestRisk = accountRiskCoeff;
+                  maxAmount = finalAmount;
+                  bestStrength = trendStrength;
+                  bestATR = atrPeriod;
+                  bestEMA10 = EMA10;
+                  bestEMA21 = EMA21;
 
-                //console.log("bestMA", bestMA);
-                console.log("bestRISK", bestRisk);
-                console.log("bestADX", bestADX);
-                console.log("bestStrength", bestStrength);
-                console.log("bestATR", bestATR);
-                console.log('bestEMA10', bestEMA10);
-                console.log('bestEMA21', bestEMA21);
-                console.log("maxAmount", maxAmount);
+                  //console.log("bestMA", bestMA);
+                  console.log("bestRISK", bestRisk);
+                  console.log("bestADX", bestADX);
+                  console.log("bestStrength", bestStrength);
+                  console.log("bestATR", bestATR);
+                  console.log('bestEMA10', bestEMA10);
+                  console.log('bestEMA21', bestEMA21);
+                  console.log("maxAmount", maxAmount);
+                  console.log("In the timeframe of: ", timeframe);
+                }
               }
             }
           }

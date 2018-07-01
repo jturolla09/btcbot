@@ -9,11 +9,11 @@ const BFXTrade = require('./BfxTrade');
 var bfx = new BFXTrade();
 var pairs = {};
 
-const accountRiskCoeff = 0.08;
+const accountRiskCoeff = 0.05;
 const maPeriods = 50;
-const adxPeriods = 20;
-const trendStrength = 10;
-const atrPeriods = 14;
+const adxPeriods = 15;
+const trendStrength = 1;
+const atrPeriods = 18;
 const EMA10 = 8;
 const EMA21 = 25;
 
