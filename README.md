@@ -85,14 +85,14 @@ XRPBTC AVG Profit per Trade:  1.9220974150438552 %
 Wins:  755 Losses:  689  
 Total earns:  848.9329535056453 (with 6 orders opened, totalizing 1172.23 BTC)  
 This is the best Configuration for this EMA strategy  
-	accountRiskCoeff = 0.05;
-	maPeriods = 50;
-	adxPeriods = 15;
-	trendStrength = 1;
-	atrPeriods = 18;
-	EMA10 = 8;
-	EMA21 = 25;
-	Timeframe = 1h;
+	accountRiskCoeff = 0.05;  
+	maPeriods = 50;  
+	adxPeriods = 15;  
+	trendStrength = 1;  
+	atrPeriods = 18;  
+	EMA10 = 8;  
+	EMA21 = 25;  
+	Timeframe = 1h;  
   
 Stil Missing optimizing this strategy with all bitfinex coins  
 Bot Eficiency:  52.285318559556785 %  
