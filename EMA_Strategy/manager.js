@@ -6,7 +6,7 @@ const EMA = require('technicalindicators').EMA
 const pairsArray = ['BCHBTC', 'BTGBTC', 'DSHBTC', 'EOSBTC', 'ETHBTC', 'IOTBTC', 'NEOBTC', 'OMGBTC', 'TRXBTC', 'XRPBTC'];
 const BFXTrade = require('./BfxTrade');
 
-var bfx = new BFXTrade();
+var bfx = new BFXTrade(pairsArray);
 var pairs = {};
 
 const accountRiskCoeff = 0.05;
@@ -82,6 +82,9 @@ function Manager(){
 
 
 Manager.prototype.runBot = function(){
+
+  console.log("Initializing BOT...");
+  bfx.getPrice();
   // var marketData = {};
   // for(pair of pairsArray){
   //   marketData[pair] = JSON.parse(fs.readFileSync('../datasets/BFX_'+pair+'_1h.json', 'utf8'));

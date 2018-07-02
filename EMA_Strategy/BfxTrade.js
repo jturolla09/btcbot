@@ -1,8 +1,61 @@
 const request = require("request");
+const BFX = require('bitfinex-api-node');
 
-function BfxTrade(){
+const bfx = new BFX({
+
+  ws: {
+    autoReconnect: true,
+    seqAudit: true,
+    packetWDDelay: 10 * 1000
+  }
+});
+
+const bws = bfx.ws(1);
+
+function BfxTrade(pairs){
 	this.initAmount = 100;
 	this.reserve={};
+	this.prices={};
+
+	bws.on('open', function(){
+		for(var pair of pairs){
+			bws.subscribeTicker("t"+pair);
+		}
+	});
+
+	bws.open();
+	setInterval(function(){
+		console.log("Restarting websockets");
+		bws.close();
+		bws.open();
+	}, 2*60*60*1000);
+}
+
+BfxTrade.prototype.getPrice = function(){
+	var self = this;
+	bws.on('ticker', function(pair, data){
+		console.log(pair, data);
+		if(!self.prices.hasOwnProperty(pair)){
+			self.prices[pair] = {lastPrice: -Infinity,
+								highPrice: -Infinity,
+								lowPrice: Infinity}
+		};
+
+		self.prices[pair]['lastPrice'] = data['lastPrice'];
+		if(data['lastPrice'] > self.prices[pair]['highPrice']){
+			self.prices[pair]['highPrice'] = data['lastPrice'];
+		};
+		if(data['lastPrice'] < self.prices[pair]['lowPrice']){
+			self.prices[pair]['lowPrice'] = data['lastPrice'];
+		};
+
+		console.log(self.prices);
+	});
+}
+
+BfxTrade.prototype.resetPrices = function(pair){
+	this.prices[pair]['highPrice'] = -Infinity;
+	this.prices[pair]['lowPrice'] = Infinity;
 }
 
 BfxTrade.prototype.testTrade = function(pair, price, amount, type, action, callback){
@@ -43,4 +96,6 @@ BfxTrade.prototype.getHistData = function(pair, callback){
 		}
 	});
 }
+
+bws.on('error', console.error);
 module.exports = BfxTrade;
