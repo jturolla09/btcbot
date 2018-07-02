@@ -49,8 +49,8 @@ function initPairs(adxPeriod, accountRiskCoeff, trendStrength, atrPeriod, EMA10,
 
   for(pair of pairsArray){
     pairs[pair]={
-      ema10: new EMA({period: EMA10, values: []}),
-      ema21: new EMA({period: EMA21, values: []}),
+      ema10: new SMA({period: EMA10, values: []}),
+      ema21: new SMA({period: EMA21, values: []}),
       maValue: 0,
       prevMaValue: 0,
       prevClose: 0,
