@@ -6,7 +6,7 @@ const EMA = require('technicalindicators').EMA
 const pairsArray = ['BCHBTC', 'BTGBTC', 'DSHBTC', 'EOSBTC', 'ETHBTC', 'IOTBTC', 'NEOBTC', 'OMGBTC', 'TRXBTC', 'XRPBTC'];
 const BFXTrade = require('./BfxTrade');
 
-var bfx = new BFXTrade(pairsArray);
+var bfx = new BFXTrade();
 var pairs = {};
 
 const accountRiskCoeff = 0.05;
@@ -33,6 +33,10 @@ function Manager(){
 
   for(pair of pairsArray){
     pairs[pair]={
+      ema10: new SMA({period: EMA10, values:[]}),
+      ema21: new SMA({period: EMA21, values:[]}),
+      adx: new ADX({period: adxPeriods, close:[], high:[], low:[]}),
+      atr: new ATR({period: atrPeriods, close:[], high:[], low:[]}),
       maValue: 0,
       prevMaValue: 0,
       prevClose: 0,
@@ -58,80 +62,58 @@ function Manager(){
     
   }
 
-  for(pair in pairs){
-    bfx.getHistData(pair, function(resppair, data){
-      var carray = [];
-      var harray = [];
-      var larray = [];
-
-      for(var d of data){
-        carray.push(d[2]);
-        harray.push(d[3]);
-        larray.push(d[4]);
-      }
-
-      pairs[resppair]['ema10'] = new SMA({period: EMA10, values:carray});
-      pairs[resppair]['ema21'] = new SMA({period: EMA21, values:carray});
-      pairs[resppair]['adx'] = new ADX({period: adxPeriods, close:carray, high:harray, low:larray});
-      pairs[resppair]['atr'] = new ATR({period: atrPeriods, close:carray, high:harray, low:larray});
-
-    });
-  }
-
 }
 
 
 Manager.prototype.runBot = function(){
 
-  console.log("Initializing BOT...");
-  bfx.getPrice();
-  // var marketData = {};
-  // for(pair of pairsArray){
-  //   marketData[pair] = JSON.parse(fs.readFileSync('../datasets/BFX_'+pair+'_1h.json', 'utf8'));
-  // }
+  var marketData = {};
+  for(pair of pairsArray){
+    marketData[pair] = JSON.parse(fs.readFileSync('../datasets/BFX_'+pair+'_1h.json', 'utf8'));
+  }
 
-  // // Find bigger data, DELETE FOR REAL TIME
-  // var index = 0;
-  // var biggerIndex = 0;
-  // var biggerData = 0;
-  // for(pair of pairsArray){
-  //   if(marketData[pair].length > biggerData){
-  //     biggerData = marketData[pair].length;
-  //     biggerIndex = index;
-  //   }
-  //   index++;
-  // }
+  // Find bigger data, DELETE FOR REAL TIME
+  var index = 0;
+  var biggerIndex = 0;
+  var biggerData = 0;
+  for(pair of pairsArray){
+    if(marketData[pair].length > biggerData){
+      biggerData = marketData[pair].length;
+      biggerIndex = index;
+    }
+    index++;
+  }
 
-  // for(i=0; i<marketData[pairsArray[biggerIndex]].length; i++){
-  //   for(pair in marketData){
-  //     if(marketData[pair][i] != undefined)
-  //       updateIndicators(pair, marketData[pair][i]);
-  //   }
-  // }
+  for(i=0; i<marketData[pairsArray[biggerIndex]].length; i++){
+    for(pair in marketData){
+      if(marketData[pair][i] != undefined)
+        updateIndicators(pair, marketData[pair][i]);
+    }
+  }
 
-  // console.log('--------------- INVERTED-EMA-STRATEGY RESULTS -------------------');
-  // console.log(' ');
-  // for(pair in marketData){
-  //   var totProfit = 0;
-  //   var totProfitPct = 0;
-  //   for(i = 0; i<pairs[pair]['profit'].length; i++){
-  //     totProfit += pairs[pair]['profit'][i];
-  //     totProfitPct += pairs[pair]['profitPct'][i];
+  console.log('--------------- INVERTED-EMA-STRATEGY RESULTS -------------------');
+  console.log(' ');
+  for(pair in marketData){
+    var totProfit = 0;
+    var totProfitPct = 0;
+    for(i = 0; i<pairs[pair]['profit'].length; i++){
+      totProfit += pairs[pair]['profit'][i];
+      totProfitPct += pairs[pair]['profitPct'][i];
+    }
+    totProfitPct = 100*((totProfitPct/(pairs[pair]['profitPct'].length))-1);
+    console.log(pair, 'Profit: ', totProfit);
+    console.log(pair, 'AVG Profit per Trade: ', totProfitPct, '%');
+  }
+  console.log(' ');
+  console.log('Wins: ', success, 'Losses: ', loss);
+  console.log('Total earns: ', (bfx.initAmount-100));
+  console.log(' ');
+  console.log('Bot Eficiency: ', (success/(success+loss))*100, '%');
+  // for( pair in marketData){
+  //   for(candle of marketData[pair]){
+  //     calculateMA(pair, candle[2])
   //   }
-  //   totProfitPct = 100*((totProfitPct/(pairs[pair]['profitPct'].length))-1);
-  //   console.log(pair, 'Profit: ', totProfit);
-  //   console.log(pair, 'AVG Profit per Trade: ', totProfitPct, '%');
   // }
-  // console.log(' ');
-  // console.log('Wins: ', success, 'Losses: ', loss);
-  // console.log('Total earns: ', (bfx.initAmount-100));
-  // console.log(' ');
-  // console.log('Bot Eficiency: ', (success/(success+loss))*100, '%');
-  // // for( pair in marketData){
-  // //   for(candle of marketData[pair]){
-  // //     calculateMA(pair, candle[2])
-  // //   }
-  // // }
 }
 
 function updateIndicators(pair, price){

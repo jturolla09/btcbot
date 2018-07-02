@@ -2,7 +2,8 @@ fs = require('fs');
 const SMA = require('technicalindicators').SMA;
 const ADX = require('technicalindicators').ADX;
 const ATR = require('technicalindicators').ATR;
-const pairsArray = ['BATBTC', 'BCHBTC', 'BFTBTC', 'BTGBTC', 'DADBTC', 'DSHBTC', 'EOSBTC', 'ETCBTC', 'ETHBTC', 'IOTBTC', 'LTCBTC', 'NEOBTC', 'OMGBTC', 'TRXBTC', 'XMRBTC', 'XRPBTC', 'ZECBTC', 'ZRXBTC'];
+const EMA = require('technicalindicators').EMA
+const pairsArray = ['BCHBTC', 'BTGBTC', 'DSHBTC', 'EOSBTC', 'ETHBTC', 'IOTBTC', 'NEOBTC', 'OMGBTC', 'TRXBTC', 'XRPBTC'];
 const BFXTrade = require('./BfxTrade');
 
 var bfx = new BFXTrade();
@@ -48,8 +49,8 @@ function initPairs(adxPeriod, accountRiskCoeff, trendStrength, atrPeriod, EMA10,
 
   for(pair of pairsArray){
     pairs[pair]={
-      ema10: new SMA({period: EMA10, values: []}),
-      ema21: new SMA({period: EMA21, values: []}),
+      ema10: new EMA({period: EMA10, values: []}),
+      ema21: new EMA({period: EMA21, values: []}),
       maValue: 0,
       prevMaValue: 0,
       prevClose: 0,
