@@ -2,13 +2,13 @@ fs = require('fs');
 const SMA = require('technicalindicators').SMA;
 const ADX = require('technicalindicators').ADX;
 const ATR = require('technicalindicators').ATR;
-const pairsArray = ['BCHBTC', 'BTGBTC', 'DSHBTC', 'EOSBTC', 'ETHBTC', 'IOTBTC', 'NEOBTC', 'OMGBTC', 'TRXBTC', 'ZECBTC'];
+const pairsArray = ['BATBTC', 'BCHBTC', 'BFTBTC', 'BTGBTC', 'DADBTC', 'DSHBTC', 'EOSBTC', 'ETCBTC', 'ETHBTC', 'IOTBTC', 'LTCBTC', 'NEOBTC', 'OMGBTC', 'TRXBTC', 'XMRBTC', 'XRPBTC', 'ZECBTC', 'ZRXBTC'];
 const BFXTrade = require('./BfxTrade');
 
 var bfx = new BFXTrade();
 var pairs = {};
 
-const timeframes = ['1h', '6h', '12h']; //done
+const timeframes = ['1h']; //done
 const accountRiskCoeffs = [0.01, 0.02, 0.03, 0.05, 0.08, 0.1]; //done
 
 const EMA10s = [5,8,9,10,14,18,22]; //done

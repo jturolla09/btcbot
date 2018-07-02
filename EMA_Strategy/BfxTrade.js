@@ -1,3 +1,5 @@
+const request = require("request");
+
 function BfxTrade(){
 	this.initAmount = 100;
 	this.reserve={};
@@ -26,5 +28,19 @@ BfxTrade.prototype.testTrade = function(pair, price, amount, type, action, callb
 
 			return callback();
 	}
+}
+
+BfxTrade.prototype.getHistData = function(pair, callback){
+	var currDate = Date.now()/1000;
+	var startDate = 3600 - currDate%3600 + currDate - 301*3600;
+	var url = 'https://api.bitfinex.com/v2/candles/trade:1h:t'+pair+'/hist?sort=1&limit=300&start='+startDate;
+
+	request({url: url, method: "GET", timeout: 15000}, function(err, response, body){
+		if(!err){
+			return callback(pair, JSON.parse(body));
+		}else{
+			console.log(err.toString());
+		}
+	});
 }
 module.exports = BfxTrade;

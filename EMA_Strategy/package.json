@@ -5,6 +5,7 @@
     "start": "node app.js"
   },
   "dependencies": {
+    "request": "^2.87.0",
     "technicalindicators": "^1.1.11"
   }
 }
