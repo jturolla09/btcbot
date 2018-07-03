@@ -92,7 +92,7 @@ Manager.prototype.runBot = function(){
     }
   }
 
-  console.log('--------------- INVERTED-EMA-STRATEGY RESULTS -------------------');
+  console.log('--------------- SMA-CROSS-STRATEGY RESULTS -------------------');
   console.log(' ');
   for(pair in marketData){
     var totProfit = 0;

@@ -9,6 +9,8 @@ const BFXTrade = require('./BfxTrade');
 var bfx = new BFXTrade(pairsArray);
 var pairs = {};
 
+const timeinSec = 3600000;
+
 const accountRiskCoeff = 0.05;
 const maPeriods = 50;
 const adxPeriods = 15;
@@ -84,54 +86,31 @@ function Manager(){
 Manager.prototype.runBot = function(){
 
   console.log("Initializing BOT...");
-  bfx.getPrice();
-  // var marketData = {};
-  // for(pair of pairsArray){
-  //   marketData[pair] = JSON.parse(fs.readFileSync('../datasets/BFX_'+pair+'_1h.json', 'utf8'));
-  // }
+  bfx.getPrices();
 
-  // // Find bigger data, DELETE FOR REAL TIME
-  // var index = 0;
-  // var biggerIndex = 0;
-  // var biggerData = 0;
-  // for(pair of pairsArray){
-  //   if(marketData[pair].length > biggerData){
-  //     biggerData = marketData[pair].length;
-  //     biggerIndex = index;
-  //   }
-  //   index++;
-  // }
+  var delay = timeinSec - Date.now()%timeinSec;
+  console.log("trading starts in ", delay/60000, " minutes");
 
-  // for(i=0; i<marketData[pairsArray[biggerIndex]].length; i++){
-  //   for(pair in marketData){
-  //     if(marketData[pair][i] != undefined)
-  //       updateIndicators(pair, marketData[pair][i]);
-  //   }
-  // }
+  setTimeout(function(){
+    for(var pair in pairs){
+      updateIndicators(pair, bfx.prices);
+      bfx.resetPrices(pair);
+    }
+    setInterval(function(){
+      for(var pair in pairs){
+        updateIndicators(pair, bfx.prices);
+        bfx.resetPrices(pair);
+      }
+    }, timeinSec);
+    setInterval(function(){
+      for(var pair in pairs){
+        findTradeOpportunity(pair, bfx.prices[pair]['lastPrice']);
+      }
+    }, 20000)
 
-  // console.log('--------------- INVERTED-EMA-STRATEGY RESULTS -------------------');
-  // console.log(' ');
-  // for(pair in marketData){
-  //   var totProfit = 0;
-  //   var totProfitPct = 0;
-  //   for(i = 0; i<pairs[pair]['profit'].length; i++){
-  //     totProfit += pairs[pair]['profit'][i];
-  //     totProfitPct += pairs[pair]['profitPct'][i];
-  //   }
-  //   totProfitPct = 100*((totProfitPct/(pairs[pair]['profitPct'].length))-1);
-  //   console.log(pair, 'Profit: ', totProfit);
-  //   console.log(pair, 'AVG Profit per Trade: ', totProfitPct, '%');
-  // }
-  // console.log(' ');
-  // console.log('Wins: ', success, 'Losses: ', loss);
-  // console.log('Total earns: ', (bfx.initAmount-100));
-  // console.log(' ');
-  // console.log('Bot Eficiency: ', (success/(success+loss))*100, '%');
-  // // for( pair in marketData){
-  // //   for(candle of marketData[pair]){
-  // //     calculateMA(pair, candle[2])
-  // //   }
-  // // }
+
+  }, delay);
+
 }
 
 function updateIndicators(pair, price){
@@ -139,22 +118,15 @@ function updateIndicators(pair, price){
   pairs[pair]['prev10Value'] = pairs[pair]['EMA10Value'];
   pairs[pair]['prev21Value'] = pairs[pair]['EMA21Value'];
   //pairs[pair]['maValue'] = pairs[pair]['ma'].nextValue(price[2]);
-  pairs[pair]['EMA10Value'] = pairs[pair]['ema10'].nextValue(price[2]);
-  pairs[pair]['EMA21Value'] = pairs[pair]['ema21'].nextValue(price[2]);
+  pairs[pair]['EMA10Value'] = pairs[pair]['ema10'].nextValue(price[pair]['lastPrice']);
+  pairs[pair]['EMA21Value'] = pairs[pair]['ema21'].nextValue(price[pair]['lastPrice']);
 
-  pairs[pair]['adxValue'] = pairs[pair]['adx'].nextValue({close: price[2] , high: price[3],
-    low: price[4]});
-  pairs[pair]['atrValue'] = pairs[pair]['atr'].nextValue({close: price[2] , high: price[3],
-    low: price[4]});
+  pairs[pair]['adxValue'] = pairs[pair]['adx'].nextValue({close: price[pair]['lastPrice'] , high: price[pair]['highPrice'],
+    low: price[pair]['lowPrice']});
+  pairs[pair]['atrValue'] = pairs[pair]['atr'].nextValue({close: price[pair]['lastPrice'] , high: price[pair]['highPrice'],
+    low: price[pair]['lowPrice']});
 
-  if(pairs[pair]['EMA10Value'] != undefined &&
-    pairs[pair]['EMA21Value'] != undefined &&
-    pairs[pair]['adxValue'] != undefined &&
-    pairs[pair]['atrValue'] != undefined){
-    findTradeOpportunity(pair, price[2]);
-  }
-
-  pairs[pair]['prevClose'] = price[2];
+  pairs[pair]['prevClose'] = price[pair]['lastPrice'];
 }
 
 //Aparentemente essa e a funcao que define a estrategia do BOT
@@ -213,7 +185,7 @@ function findTradeOpportunity(pair, close){
 //Ordens de acao, gostaria de bota-las em outro arquivo
 function openLongPosition(pair, close){
   pairs[pair]['stopLossPrice'] = close - pairs[pair]['atrValue']*2;
-  pairs[pair]['entryAmount'] = getPositionSize(close);
+  pairs[pair]['entryAmount'] = getPositionSize(pair, close);
   bfx.testTrade(pair, close, pairs[pair]['entryAmount'], 'buy', 'long',
     function(){
       pairs[pair]['long'] = true;
@@ -229,7 +201,7 @@ function openLongPosition(pair, close){
 
 function openShortPosition(pair, close){
   pairs[pair]['stopLossPrice'] = close + pairs[pair]['atrValue']*2;
-  pairs[pair]['entryAmount'] = getPositionSize(close);
+  pairs[pair]['entryAmount'] = getPositionSize(pair, close);
   bfx.testTrade(pair, close, pairs[pair]['entryAmount'], 'sell', 'short',
     function(){
       pairs[pair]['short'] = true;
@@ -284,7 +256,7 @@ function closeShortPosition(pair, close){
 }
 
 
-function getPositionSize(close){ //parece otimizado Kelly Criterium
+function getPositionSize(pair, close){ //parece otimizado Kelly Criterium
 
   if(pairs[pair]['profit'].length >= 50){
     var w = pairs[pair]['success']/(pairs[pair]['success']+pairs[pair]['loss']);

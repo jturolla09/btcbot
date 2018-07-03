@@ -31,10 +31,10 @@ function BfxTrade(pairs){
 	}, 2*60*60*1000);
 }
 
-BfxTrade.prototype.getPrice = function(){
+BfxTrade.prototype.getPrices = function(){
 	var self = this;
 	bws.on('ticker', function(pair, data){
-		console.log(pair, data);
+		//console.log(pair, data);
 		if(!self.prices.hasOwnProperty(pair)){
 			self.prices[pair] = {lastPrice: -Infinity,
 								highPrice: -Infinity,
@@ -49,7 +49,7 @@ BfxTrade.prototype.getPrice = function(){
 			self.prices[pair]['lowPrice'] = data['lastPrice'];
 		};
 
-		console.log(self.prices);
+		//console.log(self.prices);
 	});
 }
 
