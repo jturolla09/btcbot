@@ -1,0 +1,12 @@
+{
+  "name": "blade-runner",
+  "version": "0.0.1",
+  "scripts": {
+    "start": "node app.js"
+  },
+  "dependencies": {
+    "bitfinex-api-node": "^2.0.0-beta.1",
+    "request": "^2.87.0",
+    "technicalindicators": "^1.1.11"
+  }
+}

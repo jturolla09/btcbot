@@ -3,8 +3,8 @@ import time
 
 start_date = 1483228800 * 1000 #Jan 01 2017
 # pairs = ['BATBTC', 'BCHBTC', 'BFTBTC', 'BTGBTC', 'DADBTC', 'DSHBTC', 'EOSBTC', 'ETCBTC', 'ETHBTC', 'IOTBTC', 'LTCBTC', 'NEOBTC', 'OMGBTC', 'TRXBTC', 'XMRBTC', 'XRPBTC', 'ZECBTC', 'ZRXBTC']
-pairs = ['BATBTC', 'BCHBTC', 'BFTBTC', 'BTGBTC', 'DADBTC', 'DSHBTC', 'EOSBTC', 'ETCBTC', 'ETHBTC', 'IOTBTC', 'LTCBTC']
-timeframes = ['5m', '30m', '1h', '6h', '12h']
+pairs = ['BTCUSD']
+timeframes = ['1h']
 interval = 0;
 
 for timeframe in timeframes:
